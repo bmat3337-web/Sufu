@@ -42,8 +42,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.get_or_create_conversation(uuid, uuid) from public, anon;
 grant execute on function public.get_or_create_conversation(uuid, uuid) to authenticated;
-revoke execute on function public.get_or_create_conversation(uuid, uuid) from anon;
 
 -- Trigger-only functions must not be callable through the public REST RPC surface.
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
