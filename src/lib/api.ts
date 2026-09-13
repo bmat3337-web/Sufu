@@ -257,10 +257,10 @@ export async function providerById(id: string): Promise<Provider | undefined> {
   }
 
   const provider = toProviderBase(profile as ProfileRow);
-  provider.services = (servicesRes.data ?? [] as ServiceRow[]).map(
+  provider.services = ((servicesRes.data ?? []) as ServiceRow[]).map(
     (s): ProviderService => ({ name: s.name, priceFrom: num(s.price_from) })
   );
-  provider.portfolio = (portfolioRes.data ?? [] as PortfolioRow[]).map(
+  provider.portfolio = ((portfolioRes.data ?? []) as PortfolioRow[]).map(
     (p): PortfolioItem => ({ title: p.title, kind: p.kind ?? "" })
   );
   provider.reviews = ((reviewsRes.data ?? []) as unknown as ReviewRow[]).map(
@@ -320,7 +320,7 @@ export async function searchProviders(filters: ExploreFilters): Promise<Provider
   const q = filters.q?.trim();
   if (q) {
     // PostgREST `or` syntax — quote values so dots/special chars are safe.
-    const safe = q.replace(/"/g, '\\"');
+    const safe = q.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     const like = `"*${safe}*"`;
     query = query.or(
       `display_name.ilike.${like},category.ilike.${like},tagline.ilike.${like},bio.ilike.${like}`
@@ -487,7 +487,7 @@ export async function getOrCreateConversation(
     p_other_id: otherId,
   });
   if (error || !data) return null;
-  return data as string;
+  return (data as { id?: string }).id ?? null;
 }
 
 /** Thread metadata for the current user. RLS returns nothing for non-participants. */

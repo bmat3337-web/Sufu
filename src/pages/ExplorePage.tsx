@@ -234,7 +234,10 @@ export default function ExplorePage() {
               <button
                 key={cat.name}
                 type="button"
-                onClick={() => setQuery(cat.name)}
+                onClick={() => {
+                  setQuery(cat.name);
+                  sync({ q: cat.name });
+                }}
                 className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
                   selected
                     ? "border-primary bg-primary-soft text-primary"

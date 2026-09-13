@@ -101,16 +101,19 @@ create policy reports_select_own on public.reports
 -- ---------------------------------------------------------------------------
 -- 1. Privilege boundary: the browser cannot mutate server-authoritative data.
 -- ---------------------------------------------------------------------------
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+
 revoke insert (views, featured) on public.listings from anon, authenticated;
 revoke update (views, featured) on public.listings from anon, authenticated;
 revoke delete on public.orders from anon, authenticated;
 
 revoke insert (
-  verified_phone, verified_email, verified_identity, verified_business,
+  is_admin, verified_phone, verified_email, verified_identity, verified_business,
   rating, review_count, completed_jobs
 ) on public.profiles from anon, authenticated;
 revoke update (
-  verified_phone, verified_email, verified_identity, verified_business,
+  is_admin, verified_phone, verified_email, verified_identity, verified_business,
   rating, review_count, completed_jobs
 ) on public.profiles from anon, authenticated;
 

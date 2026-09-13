@@ -52,6 +52,7 @@ interface Chain {
   calls: ChainCall[];
   state: MockState;
   setResult(r: Result): Chain;
+  queueResult(r: Result): Chain;
   then(resolve: (v: Result) => void): void;
 }
 
@@ -68,22 +69,34 @@ function makeChain(result: Result = { data: [], error: null }): Chain {
   const calls: ChainCall[] = [];
   const state: MockState = {};
   let current: Result = result;
+  const queued: Result[] = [];
   let proxy: Chain;
   const target = {
     calls,
     state,
     setResult(r: Result) {
       current = r;
+      queued.length = 0;
+      return proxy;
+    },
+    queueResult(r: Result) {
+      queued.push(r);
       return proxy;
     },
     then(resolve: (v: Result) => void) {
-      resolve(current);
+      resolve(queued.shift() ?? current);
     },
   } as unknown as Chain;
 
   proxy = new Proxy(target, {
     get(t, prop) {
-      if (prop === "then" || prop === "setResult" || prop === "calls" || prop === "state") {
+      if (
+        prop === "then" ||
+        prop === "setResult" ||
+        prop === "queueResult" ||
+        prop === "calls" ||
+        prop === "state"
+      ) {
         return Reflect.get(t, prop);
       }
       return (...args: unknown[]) => {
@@ -409,8 +422,8 @@ describe("failure paths — the client fails closed with friendly errors", () =>
   it("toggleSavedListing surfaces an insert failure without losing state", async () => {
     // Not currently saved, and the insert fails (e.g. listing removed).
     const savedChain = supabaseMock.from("saved_listings");
-    savedChain.setResult({ data: null, error: null }); // isListingSaved → not saved
-    savedChain.setResult({ data: null, error: { message: "insert blocked" } }); // insert → fails
+    savedChain.queueResult({ data: null, error: null }); // isListingSaved → not saved
+    savedChain.queueResult({ data: null, error: { message: "insert blocked" } }); // insert → fails
     const res = await toggleSavedListing("me", "l1");
     expect(res.saved).toBe(false);
     expect(res.error).toBeDefined();

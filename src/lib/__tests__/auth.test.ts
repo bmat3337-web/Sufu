@@ -3,12 +3,9 @@
  * the user; every failure mode has plain-language copy.               *
  * ------------------------------------------------------------------ */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { friendlyAuthError } from "../auth";
-
-// auth.tsx imports ./supabase, which throws at module load unless env vars are
-// set — irrelevant to these pure-mapping tests, so stub it.
-vi.mock("../supabase", () => ({ supabase: {} }));
+import { isSupabaseConfigured, MISSING_CONFIG_MESSAGE, supabase } from "../supabase";
 
 describe("friendlyAuthError", () => {
   it("explains email confirmation is pending", () => {
@@ -45,5 +42,17 @@ describe("friendlyAuthError", () => {
 
   it("falls back to a generic message when none is given", () => {
     expect(friendlyAuthError(undefined)).toBe("Something went wrong. Please try again.");
+  });
+
+  it("exports a safe preview-mode client when Supabase env vars are missing", async () => {
+    expect(isSupabaseConfigured).toBe(false);
+    await expect(supabase.auth.getUser()).resolves.toEqual({
+      data: { user: null },
+      error: null,
+    });
+    await expect(supabase.from("profiles").select("*")).resolves.toEqual({
+      data: null,
+      error: { message: MISSING_CONFIG_MESSAGE },
+    });
   });
 });

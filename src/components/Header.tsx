@@ -93,7 +93,7 @@ export default function Header() {
                       {link.label}
                     </a>
                   ) : (
-                    <Link to={link.to} aria-current={active ? "page" : undefined} className={className}>
+                    <Link to={link.to} className={className}>
                       {link.label}
                     </Link>
                   )}
