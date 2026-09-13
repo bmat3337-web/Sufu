@@ -19,8 +19,7 @@ const items: NavItem[] = [
 
 /** Mobile-first primary navigation (Home | Explore | + | Inbox | Profile). */
 export default function BottomNav({ path }: { path: string }) {
-  const isActive = (item: NavItem) =>
-    item.end ? path === "/" || !path.startsWith("/") : path.startsWith(item.to);
+  const isActive = (item: NavItem) => (item.end ? path === "/" : path.startsWith(item.to));
 
   return (
     <nav

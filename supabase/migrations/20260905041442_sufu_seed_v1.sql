@@ -3,12 +3,9 @@
 --   categories + cities/suburbs + 17 providers + 19 listings + services +
 --   portfolio + reviews + a demo conversation + a saved listing.
 --
--- DEMO ACCOUNTS (for two-sided messaging / acceptance testing):
---   demo.provider@sufu.co.zw  -> Blessing Plumbing Services profile
---   demo.customer@sufu.co.zw  -> "Demo Customer" profile
---   password for BOTH: SufuDemo2026!
--- All other seeded identities are dormant auth rows (no password, unconfirmed
--- email) so the profiles.id FK to auth.users holds; they cannot sign in.
+-- Seeded identities are dormant auth rows (no password, unconfirmed email) so
+-- the profiles.id FK to auth.users holds without publishing reusable
+-- credentials in versioned SQL.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -77,9 +74,8 @@ insert into public.suburbs (city_id, name) values
   (md5('sufu:city:kwekwe')::uuid, 'Mbizo');
 
 -- ---------------------------------------------------------------------------
--- 3. Auth rows for every seeded profile (FK support) + demo accounts
+-- 3. Auth rows for every seeded profile (FK support)
 --    Dormant: no password, unconfirmed email -> cannot sign in.
---    Demo:    confirmed email + known password (documented above).
 -- ---------------------------------------------------------------------------
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select
@@ -102,19 +98,11 @@ from (values
   (md5('sufu:mediahub-zw')::uuid,        'mediahub-zw@seeded.sufu.co.zw',        'MediaHub Zimbabwe'),
   (md5('sufu:nyaradzo-holdings')::uuid,  'nyaradzo-holdings@seeded.sufu.co.zw',  'Nyaradzo Holdings'),
   (md5('sufu:mbare-coop')::uuid,         'mbare-coop@seeded.sufu.co.zw',         'Mbare Traders Co-op'),
+  (md5('sufu:bless-plumbing')::uuid,     'demo.provider@sufu.co.zw',             'Blessing Plumbing Services'),
+  (md5('sufu:demo.customer')::uuid,      'demo.customer@sufu.co.zw',             'Demo Customer'),
   (md5('sufu:rudo-s')::uuid,             'rudo-s@seeded.sufu.co.zw',             'Rudo S.'),
   (md5('sufu:farai-a')::uuid,            'farai-a@seeded.sufu.co.zw',            'Farai A.')
 ) as v(id, email, display_name);
-
--- demo accounts (confirmed, usable passwords)
-insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
-values
-  ('00000000-0000-0000-0000-000000000000', md5('sufu:bless-plumbing')::uuid, 'authenticated', 'authenticated',
-   'demo.provider@sufu.co.zw', crypt('SufuDemo2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"display_name":"Blessing Plumbing Services"}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', md5('sufu:demo.customer')::uuid, 'authenticated', 'authenticated',
-   'demo.customer@sufu.co.zw', crypt('SufuDemo2026!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"display_name":"Demo Customer"}', now(), now());
 
 -- ---------------------------------------------------------------------------
 -- 4. Profiles (the handle_new_user trigger created minimal rows; enrich them)

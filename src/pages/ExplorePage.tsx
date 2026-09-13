@@ -31,6 +31,14 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [chipCategories, setChipCategories] = useState<{ name: string; group: Group }[]>([]);
 
+  useEffect(() => {
+    setQuery(params.get("q") ?? "");
+    setGroup(params.get("group") ?? "all");
+    setCity(params.get("city") ?? "Harare");
+    setSuburb(params.get("suburb") ?? "");
+    setSort((params.get("sort") as SortKey) ?? "newest");
+  }, [params]);
+
   // Category chips come from the live Supabase table — no static mock list.
   useEffect(() => {
     let active = true;

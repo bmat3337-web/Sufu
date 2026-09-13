@@ -3,8 +3,8 @@ import { BadgeCheck, HandCoins, Languages } from "lucide-react";
 const trustPoints = [
   {
     icon: BadgeCheck,
-    title: "Vetted local experts",
-    body: "Every profile is checked by our Harare team before it goes live.",
+    title: "Earned trust badges",
+    body: "Profiles go live fast, and identity, email and business badges appear only after each check is completed.",
   },
   {
     icon: HandCoins,
@@ -56,8 +56,8 @@ export default function TrustSection() {
                 Need → Match → Connect
               </strong>
               . The person who fixes your sink or sells your maize meal isn't a
-              stranger; they're part of your community, and every listing is
-              verified before it appears.
+              stranger; they're part of your community, and trust grows through
+              visible badges, reviews and secure server-checked data.
             </p>
 
             <ul className="mt-8 space-y-5">

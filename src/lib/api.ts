@@ -741,7 +741,7 @@ export async function hasApplied(listingId: string, applicantId: string): Promis
 interface ApplicationRow {
   id: string;
   listing_id: string;
-  listing: { id: string; title: string; type: ListingType } | null;
+  listing: { id: string; title: string; type: ListingType; provider_id: string } | null;
   applicant: { id: string; display_name: string } | null;
   cover_note: string | null;
   status: string;
@@ -764,7 +764,9 @@ const toApplicationView = (r: ApplicationRow): ApplicationView => ({
 export async function receivedApplications(ownerId: string): Promise<ApplicationView[]> {
   const { data, error } = await supabase
     .from("applications")
-    .select("id, listing_id, cover_note, status, created_at, listing:listings(id, title, type), applicant:profiles(id, display_name)")
+    .select(
+      "id, listing_id, cover_note, status, created_at, listing:listings!inner(id, title, type, provider_id), applicant:profiles(id, display_name)"
+    )
     .eq("listing.provider_id", ownerId)
     .order("created_at", { ascending: false });
   if (error) return [];
