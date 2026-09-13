@@ -50,9 +50,8 @@ describe("friendlyAuthError", () => {
       data: { user: null },
       error: null,
     });
-    await expect(supabase.from("profiles").select("*")).resolves.toEqual({
-      data: null,
-      error: { message: MISSING_CONFIG_MESSAGE },
-    });
+    const res = await Promise.resolve(supabase.from("profiles").select("*"));
+    expect(res.data).toBeNull();
+    expect(res.error).toEqual({ message: MISSING_CONFIG_MESSAGE });
   });
 });
