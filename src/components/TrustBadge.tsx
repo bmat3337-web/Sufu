@@ -21,7 +21,7 @@ export function TrustBadge({ id, compact = false }: { id: VerificationId; compac
         compact ? "px-1.5 py-1" : "px-2.5 py-1 text-xs"
       }`}
     >
-      <Icon className={compact ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} aria-hidden="true" />
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {!compact && <span>{label}</span>}
     </span>
   );

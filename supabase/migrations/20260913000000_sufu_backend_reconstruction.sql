@@ -304,8 +304,20 @@ as $$
     case when coalesce(filters->>'sort','newest') = 'rating' then p.rating end desc nulls last,
     case when coalesce(filters->>'sort','newest') = 'newest' then l.posted_at end desc,
     l.posted_at desc
-  limit least(greatest(coalesce((filters->>'limit')::int, 100), 1), 100)
-  offset greatest(coalesce((filters->>'offset')::int, 0), 0);
+  limit least(greatest(coalesce(
+    case
+      when btrim(coalesce(filters->>'limit', '')) ~ '^[0-9]+$' then (filters->>'limit')::int
+      else null
+    end,
+    100
+  ), 1), 100)
+  offset greatest(coalesce(
+    case
+      when btrim(coalesce(filters->>'offset', '')) ~ '^[0-9]+$' then (filters->>'offset')::int
+      else null
+    end,
+    0
+  ), 0);
 $$;
 grant execute on function public.search_listings(jsonb) to anon, authenticated;
 

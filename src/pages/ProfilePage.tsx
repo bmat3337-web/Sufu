@@ -96,13 +96,17 @@ export default function ProfilePage() {
       mySavedListings(user.id),
       receivedApplications(user.id),
       myApplications(user.id),
-    ]).then(([saved, apps, mine]) => {
-      if (!active) return;
-      setSavedListings(saved);
-      setApplications(apps);
-      setMyApps(mine);
-      setSectionsLoading(false);
-    });
+    ])
+      .then(([saved, apps, mine]) => {
+        if (!active) return;
+        setSavedListings(saved);
+        setApplications(apps);
+        setMyApps(mine);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setSectionsLoading(false);
+      });
     return () => {
       active = false;
     };

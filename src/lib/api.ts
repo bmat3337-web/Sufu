@@ -399,7 +399,8 @@ export async function createListing(
 
   const { data, error } = await supabase.from("listings").insert(row).select("id").single();
   if (error) return { error: error.message };
-  return { id: data?.id as string | undefined };
+  const created = (Array.isArray(data) ? data[0] : data) as { id?: string } | null;
+  return { id: created?.id };
 }
 
 export interface ProfilePatch {
