@@ -73,7 +73,7 @@ export default function Header() {
   const exploreActive = path.startsWith("/explore");
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 lg:px-8">
         <a href="#top" className="flex cursor-pointer items-center" aria-label="SUFU home">
           <SufuLogo className="h-8 w-auto" />
@@ -130,10 +130,11 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile slide-in drawer */}
+      {/* Mobile slide-in drawer. Keep this outside any backdrop-filter/transform
+          containing block so fixed positioning uses the actual viewport. */}
       <div
         id="mobile-menu"
-        className={`fixed inset-0 z-50 md:hidden ${menuOpen ? "" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-[60] md:hidden ${menuOpen ? "" : "pointer-events-none"}`}
         aria-hidden={!menuOpen}
       >
         {/* Scrim */}
