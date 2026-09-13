@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="sufuFavGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#sufuFavGrad)"/>
+  <path d="M15 16.5c0-3.4 2.8-5.6 6.2-5.6s6.2 2.2 6.2 5.6c0 2.7-2 4.2-4.5 5.1-2.3.9-4.7 1.7-4.7 4.4 0 3 2.5 4.8 5.6 4.8 3 0 5.4-1.6 5.8-4.2"
+        fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32.5" cy="24.5" r="2.8" fill="#fbbf24"/>
+</svg>

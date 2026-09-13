@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* SUFU brand tokens — user spec wins over generated defaults:
+     teal/green primary actions, warm cream background, charcoal text,
+     gold/orange premium highlights. */
+
+  --color-primary: #0f766e;
+  --color-primary-bright: #0d9488;
+  --color-primary-soft: #ccfbf1;
+  --color-on-primary: #ffffff;
+
+  --color-secondary: #059669;
+  --color-secondary-soft: #d1fae5;
+
+  --color-gold: #d97706;
+  --color-gold-deep: #b45309;
+  --color-gold-soft: #fef3c7;
+
+  --color-background: #faf6ef;
+  --color-surface: #ffffff;
+  --color-surface-warm: #f3eddf;
+  --color-charcoal: #161d24;
+
+  --color-foreground: #1f2937;
+  --color-muted: #57534e;
+  --color-border: #e9e0ce;
+
+  --color-destructive: #dc2626;
+  --color-ring: #0f766e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Layered atmosphere for marketing surfaces (keep dense UI flat) */
+.bg-hero-glow {
+  background:
+    radial-gradient(52% 42% at 16% 0%, oklch(0.7 0.12 178 / 0.26), transparent 68%),
+    radial-gradient(46% 40% at 86% 6%, oklch(0.75 0.14 70 / 0.2), transparent 66%);
+}
+
+/* Subtle 1px dot grid texture */
+.dot-grid {
+  background-image: radial-gradient(circle, oklch(0.35 0.02 250 / 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.dot-grid-light {
+  background-image: radial-gradient(circle, oklch(1 0 0 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Horizontal chip rows: hide scrollbars */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
