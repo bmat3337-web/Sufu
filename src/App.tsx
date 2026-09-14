@@ -12,6 +12,7 @@ import PostPage from "./pages/PostPage";
 import RequestPage from "./pages/RequestPage";
 import RequestsPage from "./pages/RequestsPage";
 import RequestDetailPage from "./pages/RequestDetailPage";
+import EngagementPage from "./pages/EngagementPage";
 import InboxPage from "./pages/InboxPage";
 import ThreadPage from "./pages/ThreadPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -22,6 +23,7 @@ function Page({ path }: { path: string }) {
   if (path.startsWith("/explore")) return <ExplorePage />;
   if (path.startsWith("/provider/")) return <ProviderPage id={path.slice("/provider/".length)} />;
   if (path.startsWith("/listing/")) return <ListingPage id={path.slice("/listing/".length)} />;
+  if (path.startsWith("/engagement/") && path.length > "/engagement/".length) return <EngagementPage id={path.slice("/engagement/".length)} />;
   if (path.startsWith("/request/") && path.length > "/request/".length) return <RequestDetailPage id={path.slice("/request/".length)} />;
   if (path === "/requests") return <RequestsPage />;
   if (path.startsWith("/request")) return <RequestPage />;
