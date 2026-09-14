@@ -4,40 +4,20 @@ export type RequestCategory = "service" | "product" | "job" | "business";
 export type OfferStatus = "pending" | "accepted" | "declined" | "withdrawn";
 
 export interface SufuRequest {
-  id: string;
-  requesterId: string;
-  title: string;
-  description: string;
-  category: string | null;
-  requestType: RequestCategory;
-  budget: number | null;
-  currency: string;
-  city: string | null;
-  suburb: string | null;
-  preferredDate: string | null;
-  status: "open" | "matched" | "closed" | "cancelled";
-  createdAt: string;
+  id: string; requesterId: string; title: string; description: string;
+  category: string | null; requestType: RequestCategory; budget: number | null;
+  currency: string; city: string | null; suburb: string | null;
+  preferredDate: string | null; status: "open" | "matched" | "closed" | "cancelled"; createdAt: string;
 }
-
 export interface RequestOffer {
-  id: string;
-  requestId: string;
-  providerId: string;
-  price: number | null;
-  currency: string;
-  availability: string;
-  duration: string | null;
-  terms: string | null;
-  message: string;
-  status: OfferStatus;
-  createdAt: string;
+  id: string; requestId: string; providerId: string; price: number | null;
+  currency: string; availability: string; duration: string | null; terms: string | null;
+  message: string; status: OfferStatus; createdAt: string;
 }
-
 export interface CreateRequestInput {
   title: string; description: string; category?: string; requestType: RequestCategory;
   budget?: number; currency?: string; city: string; suburb?: string; preferredDate?: string;
 }
-
 export interface CreateOfferInput {
   requestId: string; providerId: string; price?: number; currency?: string;
   availability: string; duration?: string; terms?: string; message: string;
@@ -54,7 +34,6 @@ function mapRequest(row: Record<string, unknown>): SufuRequest {
     status: String(row.status ?? "open") as SufuRequest["status"], createdAt: String(row.created_at ?? ""),
   };
 }
-
 function mapOffer(row: Record<string, unknown>): RequestOffer {
   return {
     id: String(row.id), requestId: String(row.request_id), providerId: String(row.provider_id),
@@ -74,6 +53,14 @@ export async function createRequest(userId: string, input: CreateRequestInput): 
   }).select("id").single();
   if (error) return { error: error.message };
   return { id: data?.id };
+}
+
+export async function getRequest(id: string): Promise<SufuRequest | null> {
+  const { data, error } = await supabase.from("requests")
+    .select("id,requester_id,title,description,category,request_type,budget,currency,city,suburb,preferred_date,status,created_at")
+    .eq("id", id).maybeSingle();
+  if (error || !data) return null;
+  return mapRequest(data as Record<string, unknown>);
 }
 
 export async function discoverRequests(filters: { q?: string; city?: string; suburb?: string; requestType?: RequestCategory } = {}): Promise<SufuRequest[]> {
@@ -102,7 +89,9 @@ export async function createOffer(input: CreateOfferInput): Promise<{ id?: strin
 }
 
 export async function offersForRequest(requestId: string): Promise<RequestOffer[]> {
-  const { data, error } = await supabase.from("request_offers").select("id,request_id,provider_id,price,currency,availability,duration,terms,message,status,created_at").eq("request_id", requestId).order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("request_offers")
+    .select("id,request_id,provider_id,price,currency,availability,duration,terms,message,status,created_at")
+    .eq("request_id", requestId).order("created_at", { ascending: false });
   if (error) return [];
   return (data ?? []).map((row) => mapOffer(row as Record<string, unknown>));
 }
@@ -110,4 +99,12 @@ export async function offersForRequest(requestId: string): Promise<RequestOffer[
 export async function updateOfferStatus(offerId: string, status: Extract<OfferStatus, "accepted" | "declined" | "withdrawn">): Promise<{ error?: string }> {
   const { error } = await supabase.from("request_offers").update({ status, updated_at: new Date().toISOString() }).eq("id", offerId);
   return error ? { error: error.message } : {};
+}
+
+export async function acceptRequestOffer(offerId: string): Promise<{ requestId?: string; providerId?: string; error?: string }> {
+  const { data, error } = await supabase.rpc("accept_request_offer", { p_offer_id: offerId });
+  if (error) return { error: error.message };
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.request_id || !row?.provider_id) return { error: "The offer could not be accepted." };
+  return { requestId: String(row.request_id), providerId: String(row.provider_id) };
 }
