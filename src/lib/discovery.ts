@@ -60,24 +60,19 @@ export interface DiscoveryFilters extends ExploreFilters {
   radiusKm?: number;
 }
 
-/** Live marketplace discovery. Uses the existing SUFU schema while exposing
- * the new global geo fields. GPS is optional; when supplied, distance is used
- * as a secondary ranking signal and radius is enforced client-side after the
- * RLS-protected published/active listing query. */
+/** Live marketplace discovery. GPS is optional. */
 export async function discoverListings(filters: DiscoveryFilters): Promise<Listing[]> {
   let query = supabase
     .from("listings")
     .select("id,type,title,description,category,price,salary_label,condition,employment_type,remote,city,suburb,provider_id,status,views,featured,tags,posted_at,latitude,longitude")
-    .in("status", ["active", "published"]);
+    .eq("status", "active");
 
   const type = groupType(filters.group);
   if (type) query = query.eq("type", type);
   if (filters.city) query = query.eq("city", filters.city);
   if (filters.suburb) query = query.eq("suburb", filters.suburb);
-  if (filters.minPrice != null) query = query.gte("price", filters.minPrice);
-  if (filters.maxPrice != null) query = query.lte("price", filters.maxPrice);
   if (filters.q?.trim()) {
-    const q = filters.q.trim();
+    const q = filters.q.trim().replace(/[%,_]/g, " ").replace(/\./g, " ");
     query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`);
   }
 
@@ -86,7 +81,7 @@ export async function discoverListings(filters: DiscoveryFilters): Promise<Listi
 
   const rows = (data ?? []) as DiscoveryRow[];
   const geoReady = filters.latitude != null && filters.longitude != null;
-  const radius = filters.radiusKm ?? 25;
+  const radius = Math.max(1, Math.min(filters.radiusKm ?? 25, 500));
 
   return rows
     .map((row) => ({
