@@ -10,6 +10,8 @@ import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
 import PostPage from "./pages/PostPage";
 import RequestPage from "./pages/RequestPage";
+import RequestsPage from "./pages/RequestsPage";
+import RequestDetailPage from "./pages/RequestDetailPage";
 import InboxPage from "./pages/InboxPage";
 import ThreadPage from "./pages/ThreadPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -20,6 +22,8 @@ function Page({ path }: { path: string }) {
   if (path.startsWith("/explore")) return <ExplorePage />;
   if (path.startsWith("/provider/")) return <ProviderPage id={path.slice("/provider/".length)} />;
   if (path.startsWith("/listing/")) return <ListingPage id={path.slice("/listing/".length)} />;
+  if (path.startsWith("/request/") && path.length > "/request/".length) return <RequestDetailPage id={path.slice("/request/".length)} />;
+  if (path === "/requests") return <RequestsPage />;
   if (path.startsWith("/request")) return <RequestPage />;
   if (path.startsWith("/post")) return <PostPage />;
   if (path.startsWith("/inbox/")) return <ThreadPage id={path.slice("/inbox/".length)} />;
@@ -31,23 +35,6 @@ function Page({ path }: { path: string }) {
 export default function App() {
   const { path } = useRoute();
   const isRoute = path.startsWith("/");
-
-  useEffect(() => {
-    if (isRoute) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    else document.getElementById(path)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [path, isRoute]);
-
-  return (
-    <AuthProvider>
-      <ToastProvider>
-        <div id="top" className="min-h-screen bg-background font-sans text-foreground">
-          <Header />
-          <main id="main-content" className="pb-24 md:pb-0"><Page path={path} /></main>
-          <Footer />
-          <BottomNav path={path} />
-        </div>
-        <AuthModal />
-      </ToastProvider>
-    </AuthProvider>
-  );
+  useEffect(() => { if (isRoute) window.scrollTo({ top: 0, left: 0, behavior: "auto" }); else document.getElementById(path)?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [path, isRoute]);
+  return <AuthProvider><ToastProvider><div id="top" className="min-h-screen bg-background font-sans text-foreground"><Header /><main id="main-content" className="pb-24 md:pb-0"><Page path={path} /></main><Footer /><BottomNav path={path} /></div><AuthModal /></ToastProvider></AuthProvider>;
 }
