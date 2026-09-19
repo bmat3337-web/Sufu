@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { Check, ChevronDown, MapPin } from "lucide-react";
-import { fetchCities, fetchCountries } from "../lib/api";
+import { fetchCities, fetchCountries, fetchGlobalCities } from "../lib/api";
 import type { Location } from "../data";
 
 interface LocationPickerProps {
@@ -91,9 +91,18 @@ export default function LocationPicker({
   }, [open]);
 
   useEffect(() => {
-    // Until a full geography provider is connected, keep the picker honest: countries without local city data show the country and allow manual city entry through the global model rather than pretending Zimbabwe suburbs exist there.
-    if (countryCode === "ZW") setCountryCities(cities);
-    else setCountryCities([]);
+    let active = true;
+    fetchGlobalCities(countryCode).then((globalCities) => {
+      if (!active) return;
+      if (globalCities.length > 0) {
+        setCountryCities(globalCities.map((city) => ({ name: city.name, suburbs: [] })));
+      } else if (countryCode === "ZW") {
+        setCountryCities(cities);
+      } else {
+        setCountryCities([]);
+      }
+    });
+    return () => { active = false; };
   }, [countryCode, cities]);
 
   function pickCountry(code: string) {
@@ -104,11 +113,11 @@ export default function LocationPicker({
   }
 
   function pickCity(name: string) {
-    const idx = cities.findIndex((c) => c.name === name);
+    const idx = availableCities.findIndex((c) => c.name === name);
     if (idx < 0) return;
     setCityIndex(idx);
     setSuburbIndex(0);
-    onChange({ ...value, countryCode, city: name, suburb: cities[idx]?.suburbs[0] ?? "" });
+    onChange({ ...value, countryCode, city: name, suburb: availableCities[idx]?.suburbs[0] ?? "" });
   }
 
   function pickSuburb(name: string) {
