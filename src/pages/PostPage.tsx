@@ -15,6 +15,7 @@ import { createListing, setListingCoverImage, updateOwnProfile, fetchCategories 
 import LocationPicker from "../components/LocationPicker";
 import { formatUSD, type Group, type Location } from "../data";
 import { uploadListingCoverImage } from "../lib/media";
+import { SufuJourney } from "../components/SufuJourney";
 
 type DraftType = "service" | "product" | "job" | "business";
 
@@ -193,7 +194,7 @@ export default function PostPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 lg:px-8">
-      <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">Post on SUFU</h1>
+      <p className="mt-4 text-sm font-semibold text-primary">Turn a need into an opportunity.</p><h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground">Post on SUFU</h1>
       <p className="mt-2 text-muted">
         Offer a service, sell something, post a job, or create a business profile. One account
         does it all — no separate logins.
