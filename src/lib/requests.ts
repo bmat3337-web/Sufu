@@ -64,8 +64,9 @@ export async function getRequest(id: string): Promise<SufuRequest | null> {
   return mapRequest(data as Record<string, unknown>);
 }
 
-export async function discoverRequests(filters: { q?: string; city?: string; suburb?: string; requestType?: RequestCategory } = {}): Promise<SufuRequest[]> {
+export async function discoverRequests(filters: { q?: string; country?: string; city?: string; suburb?: string; requestType?: RequestCategory } = {}): Promise<SufuRequest[]> {
   let query = supabase.from("requests").select("id,requester_id,title,description,category,request_type,budget,currency,city,suburb,preferred_date,status,created_at").eq("status", "open").order("created_at", { ascending: false }).limit(100);
+  if (filters.country) query = query.eq("target_country_code", filters.country.toUpperCase());
   if (filters.city) query = query.eq("city", filters.city);
   if (filters.suburb) query = query.eq("suburb", filters.suburb);
   if (filters.requestType) query = query.eq("request_type", filters.requestType);
