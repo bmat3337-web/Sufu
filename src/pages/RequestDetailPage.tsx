@@ -5,6 +5,7 @@ import { useAuth } from "../lib/auth";
 import { useToast } from "../components/Toast";
 import { createOffer, offersForRequest, getRequest, acceptRequestOffer, updateOfferStatus, type RequestOffer, type SufuRequest } from "../lib/requests";
 import { getOrCreateConversation } from "../lib/api";
+import { SufuJourney } from "../components/SufuJourney";
 
 export default function RequestDetailPage({ id }: { id: string }) {
   const { user, openAuth } = useAuth();
