@@ -4,6 +4,7 @@ import { Link, navigate } from "../router";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../lib/auth";
 import { avatarGradient, initials } from "../components/ProviderCard";
+import { SufuJourney } from "../components/SufuJourney";
 import { DetailSkeleton } from "../components/SkeletonCards";
 import {
   conversationDetail,
@@ -142,6 +143,8 @@ export default function ThreadPage({ id }: { id: string }) {
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-8rem)] max-w-2xl flex-col px-5 py-6 lg:px-8">
+      <SufuJourney stage="connected" />
+
       <div className="flex items-center gap-2">
         <button
           type="button"
