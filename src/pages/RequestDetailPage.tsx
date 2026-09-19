@@ -4,7 +4,8 @@ import { Link, navigate } from "../router";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../components/Toast";
 import { createOffer, offersForRequest, getRequest, acceptRequestOffer, updateOfferStatus, type RequestOffer, type SufuRequest } from "../lib/requests";
-import { getOrCreateConversation } from "../lib/api";
+import { getOrCreateConversation, providersByIds } from "../lib/api";
+import { matchRequestListings, matchLabel, type RequestMatch } from "../lib/matching";
 import { SufuJourney } from "../components/SufuJourney";
 import { FileCheck2, HandCoins } from "lucide-react";
 
@@ -21,10 +22,16 @@ export default function RequestDetailPage({ id }: { id: string }) {
   const [terms, setTerms] = useState("");
   const [saving, setSaving] = useState(false);
   const [acting, setActing] = useState<string | null>(null);
+  const [matches, setMatches] = useState<RequestMatch[]>([]);
+  const [matchLoading, setMatchLoading] = useState(false);
 
   async function reload() {
     const [nextRequest, nextOffers] = await Promise.all([getRequest(id), offersForRequest(id)]);
     setRequest(nextRequest); setOffers(nextOffers);
+    setMatchLoading(true);
+    const nextMatches = await matchRequestListings(id);
+    setMatches(nextMatches.slice(0, 6));
+    setMatchLoading(false);
   }
   useEffect(() => { void reload(); }, [id]);
 
