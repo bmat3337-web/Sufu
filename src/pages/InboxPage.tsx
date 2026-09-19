@@ -79,7 +79,7 @@ export default function InboxPage() {
             </div>
             <div className="divide-y divide-border/70">{conversations.map((conversation)=><Link key={conversation.id} to={`/inbox/${conversation.id}`} className="group flex items-center gap-3 px-2 py-4 transition hover:bg-background/60">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary"><MessageCircle className="h-5 w-5"/></span>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><span className="truncate font-semibold text-foreground">{conversation.otherUserName}</span>{conversation.unreadCount>0&&<span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-on-primary">{conversation.unreadCount}</span>}</span><span className="mt-1 block truncate text-sm text-muted">{conversation.lastMessage ?? "Start the conversation"}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><span className="truncate font-semibold text-foreground">{conversation.otherName}</span>{conversation.unreadCount>0&&<span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-on-primary">{conversation.unreadCount}</span>}</span><span className="mt-1 block truncate text-sm text-muted">{conversation.lastMessage ?? "Start the conversation"}</span></span>
               <span className="text-xs text-muted">{timeAgo(conversation.lastMessageAt)}</span><ArrowRight className="h-4 w-4 text-muted transition group-hover:translate-x-1"/></Link>)}</div>
           </section>
           <aside className="space-y-3">
