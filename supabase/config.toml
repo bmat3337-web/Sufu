@@ -1,0 +1,8 @@
+# SUFU Supabase Edge Function configuration.
+# Paynow calls this callback without a Supabase user JWT; authenticity is
+# established by validating the Paynow integration-key hash in the function.
+[functions.paynow-result]
+verify_jwt = false
+
+[functions.paynow-initiate]
+verify_jwt = true
