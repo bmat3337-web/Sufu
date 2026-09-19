@@ -7,6 +7,7 @@ import { DetailSkeleton } from "../components/SkeletonCards";
 import { timeAgo } from "../data";
 import { myConversations, type ConversationSummary } from "../lib/api";
 import { SufuJourney } from "../components/SufuJourney";
+import { ArrowRight, BriefcaseBusiness, FileText, HandCoins } from "lucide-react";
 
 export default function InboxPage() {
   const { user, loading: authLoading, openAuth } = useAuth();
@@ -63,6 +64,28 @@ export default function InboxPage() {
         >
           Sign in / create account
         </button>
+      </div>
+    );
+  }
+
+  if (conversations.length > 0) {
+    return (
+      <div className="mx-auto max-w-5xl px-5 py-8 lg:px-8">
+        <SufuJourney stage="connected" />
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <section className="rounded-[28px] border border-border bg-surface p-4 shadow-sm">
+            <div className="flex items-end justify-between gap-4 px-2 pb-3">
+              <div><p className="text-sm font-medium text-primary">Connected</p><h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground">Your SUFU conversations</h1><p className="mt-1 text-muted">Turn a need into a real conversation, then get it done.</p></div>
+            </div>
+            <div className="divide-y divide-border/70">{conversations.map((conversation)=><Link key={conversation.id} to={`/inbox/${conversation.id}`} className="group flex items-center gap-3 px-2 py-4 transition hover:bg-background/60">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary"><MessageCircle className="h-5 w-5"/></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><span className="truncate font-semibold text-foreground">{conversation.otherUserName}</span>{conversation.unreadCount>0&&<span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-on-primary">{conversation.unreadCount}</span>}</span><span className="mt-1 block truncate text-sm text-muted">{conversation.lastMessage ?? "Start the conversation"}</span></span>
+              <span className="text-xs text-muted">{timeAgo(conversation.lastMessageAt)}</span><ArrowRight className="h-4 w-4 text-muted transition group-hover:translate-x-1"/></Link>)}</div>
+          </section>
+          <aside className="space-y-3">
+            <div className="rounded-[24px] border border-border bg-[#fffdf7] p-5"><p className="text-sm font-semibold text-foreground">What happens next?</p><div className="mt-4 space-y-3 text-sm text-muted"><p className="flex gap-2"><HandCoins className="h-4 w-4 shrink-0 text-primary"/>Ask or respond with an offer.</p><p className="flex gap-2"><FileText className="h-4 w-4 shrink-0 text-primary"/>Agree scope, price and timing.</p><p className="flex gap-2"><BriefcaseBusiness className="h-4 w-4 shrink-0 text-primary"/>Get the work or transaction done.</p></div></div>
+          </aside>
+        </div>
       </div>
     );
   }
