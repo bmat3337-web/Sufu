@@ -3,6 +3,7 @@ import { Link } from "../router";
 import { MapPin, Search, Send } from "lucide-react";
 import LocationPicker from "../components/LocationPicker";
 import { discoverRequests, type RequestCategory, type SufuRequest } from "../lib/requests";
+import { SufuJourney } from "../components/SufuJourney";
 
 const types: { id: RequestCategory | "all"; label: string }[] = [
   { id: "all", label: "All needs" }, { id: "service", label: "Services" },
@@ -26,7 +27,7 @@ export default function RequestsPage() {
   }, [q, city, suburb, type]);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8"><SufuJourney stage="need" />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div><h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">People need this</h1><p className="mt-1 text-muted">Find open requests and turn demand into your next opportunity.</p></div>
         <Link to="/request" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 font-semibold text-on-primary"><Send className="h-4 w-4" />Post a request</Link>
