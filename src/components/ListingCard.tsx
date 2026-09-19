@@ -23,8 +23,19 @@ export default function ListingCard({ listing, provider }: ListingCardProps) {
       to={`/listing/${listing.id}`}
       className="group flex cursor-pointer gap-3 rounded-2xl border border-border bg-surface p-3 shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
     >
-      <span className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary-soft via-surface to-secondary-soft sm:h-28 sm:w-28">
-        <CategoryIcon name={listing.category} className="h-9 w-9 text-primary" />
+      <span className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-primary-soft via-surface to-secondary-soft sm:h-28 sm:w-28">
+        {listing.coverImageUrl ? (
+          <img
+            src={listing.coverImageUrl}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center">
+            <CategoryIcon name={listing.category} className="h-9 w-9 text-primary" />
+          </span>
+        )}
         {listing.featured && (
           <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-charcoal">
             <Star className="h-3 w-3" fill="currentColor" aria-hidden="true" />
