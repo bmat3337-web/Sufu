@@ -347,6 +347,20 @@ export async function fetchCategories(): Promise<{ name: string; group: Group }[
   }));
 }
 
+export async function fetchCountries(): Promise<{ code: string; name: string; defaultCurrency: string }[]> {
+  const { data, error } = await supabase
+    .from("sufu_countries")
+    .select("country_code,name,default_currency")
+    .eq("enabled", true)
+    .order("name");
+  if (error) return [];
+  return ((data ?? []) as { country_code: string; name: string; default_currency: string }[]).map((r) => ({
+    code: r.country_code,
+    name: r.name,
+    defaultCurrency: r.default_currency,
+  }));
+}
+
 /* ------------------------------ locations ---------------------------- */
 
 export async function fetchCities(): Promise<{ name: string; suburbs: string[] }[]> {
