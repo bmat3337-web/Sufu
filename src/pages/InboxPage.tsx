@@ -6,6 +6,7 @@ import { avatarGradient, initials } from "../components/ProviderCard";
 import { DetailSkeleton } from "../components/SkeletonCards";
 import { timeAgo } from "../data";
 import { myConversations, type ConversationSummary } from "../lib/api";
+import { SufuJourney } from "../components/SufuJourney";
 
 export default function InboxPage() {
   const { user, loading: authLoading, openAuth } = useAuth();
