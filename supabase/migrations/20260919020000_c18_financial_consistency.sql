@@ -165,7 +165,16 @@ begin
   if p_amount_minor <> v_pi.amount_minor or upper(p_currency) <> upper(v_pi.currency) then
     raise exception 'SETTLEMENT_AMOUNT_MISMATCH';
   end if;
+  if p_status = 'processing' and v_pi.status in ('succeeded','failed','cancelled','refunded') then
+    raise exception 'INVALID_PAYMENT_STATE_TRANSITION';
+  end if;
   if p_status = 'succeeded' and v_pi.status in ('failed','cancelled','refunded') then
+    raise exception 'INVALID_PAYMENT_STATE_TRANSITION';
+  end if;
+  if p_status = 'failed' and v_pi.status in ('succeeded','refunded') then
+    raise exception 'INVALID_PAYMENT_STATE_TRANSITION';
+  end if;
+  if p_status = 'cancelled' and v_pi.status in ('succeeded','refunded') then
     raise exception 'INVALID_PAYMENT_STATE_TRANSITION';
   end if;
   if p_status = 'refunded' and v_pi.status not in ('succeeded','refunded') then
@@ -185,6 +194,23 @@ begin
     return v_pi;
   end if;
 
+  if p_status in ('succeeded','refunded') then
+    insert into public.payment_settlements(
+      payment_intent_id, provider, provider_transaction_id, amount_minor, currency, status, posted_at
+    )
+    values (
+      p_payment_intent_id, p_provider, coalesce(p_provider_intent_id, p_provider_event_id),
+      p_amount_minor, upper(p_currency), case when p_status='succeeded' then 'posted' else 'reversed' end, now()
+    )
+    on conflict (payment_intent_id) do update
+      set provider=excluded.provider,
+          provider_transaction_id=excluded.provider_transaction_id,
+          amount_minor=excluded.amount_minor,
+          currency=excluded.currency,
+          status=excluded.status,
+          posted_at=excluded.posted_at;
+  end if;
+
   update public.payment_intents
     set status=p_status,
         provider=p_provider,
@@ -192,6 +218,23 @@ begin
         updated_at=now()
   where id=p_payment_intent_id
   returning * into v_pi;
+
+  if p_status = 'refunded' and v_pi.source_type='engagement' then
+    select * into v_hold
+    from public.escrow_holds
+    where engagement_id=v_pi.source_id
+    for update;
+    if found then
+      if v_hold.status='released' then
+        raise exception 'ESCROW_ALREADY_RELEASED';
+      end if;
+      if v_hold.status in ('pending','funded') then
+        update public.escrow_holds
+          set status='refunded', refunded_at=now(), updated_at=now()
+        where id=v_hold.id;
+      end if;
+    end if;
+  end if;
 
   if p_status = 'succeeded' and v_pi.source_type='engagement' then
     select * into v_hold
