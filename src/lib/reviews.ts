@@ -10,4 +10,5 @@ function map(r:Record<string,unknown>):SufuReview{return{
   body:r.body == null ? (r.text == null ? null : String(r.text)) : String(r.body), createdAt:String(r.created_at)
 };}
 export async function reviewsForUser(userId:string){const {data,error}=await supabase.from("reviews").select("*").eq("reviewee_id",userId).order("created_at",{ascending:false});return error?[]:(data??[]).map(r=>map(r as Record<string,unknown>));}
+export async function reviewForEngagement(engagementId:string, reviewerId:string){const {data,error}=await supabase.from("reviews").select("*").eq("engagement_id",engagementId).eq("reviewer_id",reviewerId).maybeSingle();return error||!data?null:map(data as Record<string,unknown>);}
 export async function submitReview(engagementId:string,rating:number,body:string){const {data,error}=await supabase.rpc("submit_review",{p_engagement_id:engagementId,p_rating:rating,p_body:body||null});if(error)return{error:error.message};const row=Array.isArray(data)?data[0]:data;return row?.id?{review:map(row as Record<string,unknown>)}:{error:"The review could not be submitted."};}
