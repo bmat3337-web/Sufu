@@ -1,0 +1,2 @@
+export const SUFU_LANGUAGE={tagline:"Need it? Sufu it.",promise:"Find it. Sufu it. Get it done.",heroPrompts:["Need a plumber? Sufu it.","Need a product? Sufu it.","Need a job? Sufu it.","Need customers? Sufu it.","Need something good? Sufu it."],actions:{find:"Sufu it",request:"Sufu a need",offer:"Sufu an offer",connect:"Sufu a conversation",complete:"Get it done"}} as const;
+export function sufuActionLabel(noun:string){return `Sufu ${noun}`;}
