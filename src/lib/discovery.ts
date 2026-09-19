@@ -18,6 +18,7 @@ interface DiscoveryRow {
   status: string;
   views: number;
   featured: boolean;
+  cover_image_url: string | null;
   tags: string[];
   posted_at: string;
   latitude: number | null;
@@ -41,6 +42,7 @@ const toListing = (row: DiscoveryRow): Listing => ({
   views: row.views,
   tags: row.tags ?? [],
   featured: row.featured,
+  coverImageUrl: row.cover_image_url ?? undefined,
 });
 
 const groupType = (group?: string): ListingType | undefined =>
@@ -64,7 +66,7 @@ export interface DiscoveryFilters extends ExploreFilters {
 export async function discoverListings(filters: DiscoveryFilters): Promise<Listing[]> {
   let query = supabase
     .from("listings")
-    .select("id,type,title,description,category,price,salary_label,condition,employment_type,remote,city,suburb,provider_id,status,views,featured,tags,posted_at,latitude,longitude")
+    .select("id,type,title,description,category,price,salary_label,condition,employment_type,remote,city,suburb,provider_id,status,views,featured,cover_image_url,tags,posted_at,latitude,longitude")
     .eq("status", "active");
 
   const type = groupType(filters.group);
