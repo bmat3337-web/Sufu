@@ -24,7 +24,8 @@ export default function RequestPage() {
   const [category, setCategory] = useState("");
   const [budget, setBudget] = useState("");
   const [currency, setCurrency] = useState("USD");
-  const [location, setLocation] = useState<Location>({ city: "Harare", suburb: "" });
+  const [location, setLocation] = useState<Location>({ city: "Harare", suburb: "", countryCode: "ZW" });
+  const [targetLocation, setTargetLocation] = useState<Location>({ city: "Harare", suburb: "", countryCode: "ZW" });
   const [preferredDate, setPreferredDate] = useState("");
   const [categories, setCategories] = useState<{ name: string; group: Group }[]>([]);
   const [saving, setSaving] = useState(false);
@@ -36,10 +37,10 @@ export default function RequestPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || !description.trim() || !location.city.trim()) { setError("Add a clear title, details and location so providers can respond."); return; }
+    if (!title.trim() || !description.trim() || !targetLocation.city.trim()) { setError("Add a clear title, details and location so providers can respond."); return; }
     if (!user) { toast("Sign in to post a request"); openAuth(); return; }
     setError(null); setSaving(true);
-    const result = await createRequest(user.id, { title, description, category, requestType, budget: budget ? Number(budget) : undefined, currency, city: location.city, suburb: location.suburb, preferredDate: preferredDate || undefined });
+    const result = await createRequest(user.id, { title, description, category, requestType, budget: budget ? Number(budget) : undefined, currency, city: targetLocation.city, suburb: targetLocation.suburb, countryCode: location.countryCode ?? "ZW", targetCountryCode: targetLocation.countryCode ?? "ZW", preferredDate: preferredDate || undefined });
     setSaving(false);
     if (result.error) { setError("We couldn't post your request. Please try again."); return; }
     setSubmitted(true); toast("Your request is now visible to relevant providers");
@@ -63,7 +64,7 @@ export default function RequestPage() {
           <div><label className="text-sm font-semibold text-foreground" htmlFor="request-title">What do you need?</label><input id="request-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Need a plumber tomorrow in Avondale" className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground focus:border-primary focus:outline-none" /></div>
           <div className="grid gap-4 sm:grid-cols-2"><div><label className="text-sm font-semibold text-foreground" htmlFor="request-category">Category</label><select id="request-category" value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground"><option value="">Choose a category…</option>{categoryOptions.map((c) => <option key={c.name}>{c.name}</option>)}</select></div><div><label className="text-sm font-semibold text-foreground" htmlFor="request-budget">Budget</label><div className="mt-1.5 flex gap-2"><select value={currency} onChange={(e) => setCurrency(e.target.value)} className="rounded-xl border border-border bg-background px-3 text-foreground"><option>USD</option><option>ZWG</option><option>ZAR</option><option>GBP</option><option>EUR</option></select><input id="request-budget" type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="Optional" className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-3 text-foreground" /></div></div></div>
           <div><label className="text-sm font-semibold text-foreground" htmlFor="request-description">Details</label><textarea id="request-description" rows={5} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Quantity, scope, requirements, and anything providers should know." className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground focus:border-primary focus:outline-none" /></div>
-          <div className="grid gap-4 sm:grid-cols-2"><div><label className="flex items-center gap-2 text-sm font-semibold text-foreground"><MapPin className="h-4 w-4 text-primary" />Location</label><div className="mt-1.5"><LocationPicker value={location} onChange={setLocation} idPrefix="request" compact /></div></div><div><label className="text-sm font-semibold text-foreground" htmlFor="request-date">Preferred date</label><input id="request-date" type="date" value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground" /></div></div>
+          <div className="grid gap-4 sm:grid-cols-2"><div><label className="flex items-center gap-2 text-sm font-semibold text-foreground"><MapPin className="h-4 w-4 text-primary" />Where are you?</label><div className="mt-1.5"><LocationPicker value={location} onChange={setLocation} idPrefix="request-origin" compact /></div><p className="mt-1 text-xs text-muted">Your origin. This can differ from where you need something.</p></div><div><label className="flex items-center gap-2 text-sm font-semibold text-foreground"><MapPin className="h-4 w-4 text-primary" />Where do you need it?</label><div className="mt-1.5"><LocationPicker value={targetLocation} onChange={setTargetLocation} idPrefix="request-target" compact /></div><p className="mt-1 text-xs text-muted">Target location for the need.</p></div></div><div><label className="text-sm font-semibold text-foreground" htmlFor="request-date">Preferred date</label><input id="request-date" type="date" value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground" /></div></div>
           {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
           <button type="submit" disabled={saving} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60">{saving ? "Posting…" : <><Send className="h-4 w-4" />Post request</>}</button>
         </div>
