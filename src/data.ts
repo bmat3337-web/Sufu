@@ -71,6 +71,7 @@ export interface Listing {
   views: number;
   tags: string[];
   featured?: boolean;
+  coverImageUrl?: string;
 }
 
 /** Static navigation config — the four browse groups. */
