@@ -8,6 +8,7 @@ import { ListingCardSkeleton, ProviderCardSkeleton } from "../components/Skeleto
 import Tabs from "../components/Tabs";
 import TrustSection from "../components/TrustSection";
 import SellCta from "../components/SellCta";
+import { SufuItChips } from "../components/SufuItChips";
 import {
   businessProviders,
   latestOpportunities,
@@ -71,6 +72,8 @@ export default function HomePage() {
 
       <section id="categories" className="scroll-mt-20 border-t border-border/60 bg-background">
         <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
+          <div className="mb-6 rounded-[24px] border border-border/60 bg-surface/70 p-4"><div className="mb-3 text-sm font-medium text-muted">Need something else?</div><SufuItChips onSelect={(value) => { window.location.href = `/explore?q=${encodeURIComponent(value)}`; }} /></div>
+
           <Tabs
             items={categoryGroups.map((g) => ({ id: g.id, label: g.label }))}
             active={activeGroup}
