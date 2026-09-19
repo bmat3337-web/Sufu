@@ -465,6 +465,78 @@ export async function updateOwnProfile(
   return {};
 }
 
+export interface ProfileLocation {
+  id: string;
+  role: "origin" | "operating" | "service_area" | "fulfilment";
+  countryCode: string;
+  countryName: string;
+  city: string | null;
+  regionName: string | null;
+  radiusKm: number | null;
+}
+
+export async function profileLocations(profileId: string): Promise<ProfileLocation[]> {
+  const { data, error } = await supabase
+    .from("profile_locations")
+    .select("location_id,role,sufu_locations(country_code,name:city,region_name,radius_km)")
+    .eq("profile_id", profileId);
+  if (error || !data) return [];
+  const countryCodes = [...new Set(data.map((r: any) => r.sufu_locations?.country_code).filter(Boolean))];
+  const { data: countries } = countryCodes.length
+    ? await supabase.from("sufu_countries").select("country_code,name").in("country_code", countryCodes)
+    : { data: [] as any[] };
+  const names = new Map((countries ?? []).map((r: any) => [r.country_code, r.name]));
+  return data.map((r: any) => ({
+    id: String(r.location_id),
+    role: r.role,
+    countryCode: String(r.sufu_locations?.country_code ?? ""),
+    countryName: String(names.get(r.sufu_locations?.country_code) ?? r.sufu_locations?.country_code ?? ""),
+    city: r.sufu_locations?.name ? String(r.sufu_locations.name) : null,
+    regionName: r.sufu_locations?.region_name ? String(r.sufu_locations.region_name) : null,
+    radiusKm: r.sufu_locations?.radius_km == null ? null : Number(r.sufu_locations.radius_km),
+  }));
+}
+
+export async function addProfileServiceArea(
+  profileId: string,
+  input: { countryCode: string; city?: string; regionName?: string; radiusKm?: number }
+): Promise<{ error?: string }> {
+  const { data: location, error: locationError } = await supabase
+    .from("sufu_locations")
+    .insert({
+      country_code: input.countryCode.toUpperCase(),
+      city: input.city?.trim() || null,
+      region_name: input.regionName?.trim() || null,
+      radius_km: input.radiusKm ?? null,
+      privacy: "area",
+      source: "manual",
+      created_by: profileId,
+    })
+    .select("id")
+    .single();
+  if (locationError || !location) return { error: locationError?.message ?? "Could not create location" };
+  const { error } = await supabase.from("profile_locations").insert({
+    profile_id: profileId,
+    location_id: location.id,
+    role: "service_area",
+    is_primary: false,
+  });
+  if (error) {
+    await supabase.from("sufu_locations").delete().eq("id", location.id).eq("created_by", profileId);
+    return { error: error.message };
+  }
+  return {};
+}
+
+export async function removeProfileLocation(profileId: string, locationId: string): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from("profile_locations")
+    .delete()
+    .eq("profile_id", profileId)
+    .eq("location_id", locationId);
+  return error ? { error: error.message } : {};
+}
+
 /* ------------------------------ messaging ----------------------------- */
 
 export interface ConversationSummary {
