@@ -8,6 +8,7 @@ import { getOrCreateConversation } from "../lib/api";
 import { reviewForEngagement, submitReview } from "../lib/reviews";
 import { createPaymentIntent, paymentIntentsForUser, startPaynowCheckout, type PaymentIntent } from "../lib/paymentIntents";
 import { getEscrowForEngagement, requestEscrowFunding, releaseEscrow, type EscrowHold } from "../lib/escrow";
+import { SufuJourney } from "../components/SufuJourney";
 
 const labels: Record<Engagement["status"], string> = { agreed: "Agreed", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled", disputed: "Disputed" };
 const paymentLabels: Record<PaymentIntent["status"], string> = { pending: "Payment setup pending", requires_action: "Payment action required", processing: "Payment processing", succeeded: "Payment confirmed", failed: "Payment failed", cancelled: "Payment cancelled", refunded: "Payment refunded" };
