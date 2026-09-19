@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { Check, ChevronDown, MapPin } from "lucide-react";
-import { fetchCities } from "../lib/api";
+import { fetchCities, fetchCountries } from "../lib/api";
 import type { Location } from "../data";
 
 interface LocationPickerProps {
@@ -29,20 +29,23 @@ export default function LocationPicker({
   className = "",
 }: LocationPickerProps) {
   const [open, setOpen] = useState(false);
+  const [countries, setCountries] = useState<{ code: string; name: string; defaultCurrency: string }[]>([]);
   const [cities, setCities] = useState<{ name: string; suburbs: string[] }[]>([]);
   const [locationsError, setLocationsError] = useState(false);
   const [cityIndex, setCityIndex] = useState(0);
   const [suburbIndex, setSuburbIndex] = useState(0);
+  const [countryCode, setCountryCode] = useState(value.countryCode ?? "ZW");
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Live locations from Supabase — no static mock list.
   useEffect(() => {
     let active = true;
-    fetchCities()
-      .then((list) => {
+    Promise.all([fetchCountries(), fetchCities()])
+      .then(([countryList, cityList]) => {
         if (!active) return;
-        setCities(list);
+        setCountries(countryList);
+        setCities(cityList);
         setLocationsError(false);
       })
       .catch(() => {
@@ -85,16 +88,23 @@ export default function LocationPicker({
     };
   }, [open]);
 
+  function pickCountry(code: string) {
+    setCountryCode(code);
+    onChange({ ...value, countryCode: code, city: "", suburb: "" });
+    setCityIndex(0);
+    setSuburbIndex(0);
+  }
+
   function pickCity(name: string) {
     const idx = cities.findIndex((c) => c.name === name);
     if (idx < 0) return;
     setCityIndex(idx);
     setSuburbIndex(0);
-    onChange({ city: name, suburb: cities[idx]?.suburbs[0] ?? "" });
+    onChange({ ...value, countryCode, city: name, suburb: cities[idx]?.suburbs[0] ?? "" });
   }
 
   function pickSuburb(name: string) {
-    onChange({ city: city.name, suburb: name });
+    onChange({ ...value, countryCode, city: city.name, suburb: name });
     setOpen(false);
     triggerRef.current?.focus();
   }
@@ -142,7 +152,7 @@ export default function LocationPicker({
       >
         <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         <span className="max-w-[9rem] truncate sm:max-w-none">
-          {value.city}
+          {countries.find((c) => c.code === countryCode)?.name ?? countryCode}{value.city ? ` · ${value.city}` : ""}
           {shownSuburb ? ` · ${shownSuburb}` : ""}
         </span>
         <ChevronDown
@@ -158,7 +168,16 @@ export default function LocationPicker({
           className="animate-pop-in absolute left-0 z-30 mt-2 w-80 rounded-2xl border border-border bg-surface p-4 shadow-xl shadow-foreground/10"
           role="presentation"
         >
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">City</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Country</p>
+          <select
+            value={countryCode}
+            onChange={(event) => pickCountry(event.target.value)}
+            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus:border-primary focus:outline-none"
+            aria-label="Country"
+          >
+            {countries.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}
+          </select>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted">City</p>
           {cities.length === 0 ? (
             <p className="mt-2 text-sm text-muted" role="status">
               {locationsError
