@@ -184,7 +184,11 @@ export default function ListingPage({ id }: { id: string }) {
 
       {/* Photo / hero tile */}
       <div className="relative mt-4 flex h-52 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary-soft via-surface to-secondary-soft sm:h-64">
-        <CategoryIcon name={listing.category} className="h-16 w-16 text-primary sm:h-20 sm:w-20" />
+        {listing.coverImageUrl ? (
+          <img src={listing.coverImageUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <CategoryIcon name={listing.category} className="h-16 w-16 text-primary sm:h-20 sm:w-20" />
+        )}
         <span className="absolute left-4 top-4 rounded-full bg-surface/90 px-3 py-1 text-xs font-bold text-foreground backdrop-blur">
           {typeLabel[listing.type]}
         </span>
