@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
   const { error: settlementError } = await admin.rpc("apply_payment_settlement", {
     p_payment_intent_id: paymentIntentId,
     p_provider: "paynow",
-    p_provider_event_id: paynowReference || reference + ":" + status,
+    p_provider_event_id: paynowReference ? paynowReference + ":" + status + ":" + (result.hash ?? "").slice(0, 24) : reference + ":" + status + ":" + (result.hash ?? "").slice(0, 24),
     p_event_type: "paynow.status." + status.toLowerCase().replaceAll(" ", "_"),
     p_status: normalizedStatus,
     p_provider_intent_id: paynowReference || reference,
