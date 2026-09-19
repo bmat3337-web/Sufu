@@ -23,6 +23,9 @@ import {
   receivedApplications,
   myApplications,
   updateApplicationStatus,
+  profileLocations,
+  addProfileServiceArea,
+  removeProfileLocation,
   type ApplicationView,
   type ApplicationStatus,
 } from "../lib/api";
@@ -57,6 +60,10 @@ export default function ProfilePage() {
   const [busyApp, setBusyApp] = useState<string | null>(null);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [serviceAreas, setServiceAreas] = useState<Awaited<ReturnType<typeof profileLocations>>>([]);
+  const [areaCountry, setAreaCountry] = useState("ZW");
+  const [areaCity, setAreaCity] = useState("");
+  const [areaBusy, setAreaBusy] = useState(false);
 
   const verifyEmail = async () => {
     setVerifyingEmail(true);
@@ -96,12 +103,14 @@ export default function ProfilePage() {
       mySavedListings(user.id),
       receivedApplications(user.id),
       myApplications(user.id),
+      profileLocations(user.id),
     ])
-      .then(([saved, apps, mine]) => {
+      .then(([saved, apps, mine, areas]) => {
         if (!active) return;
         setSavedListings(saved);
         setApplications(apps);
         setMyApps(mine);
+        setServiceAreas(areas);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -286,6 +295,16 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
+            <section aria-label="Service areas" className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+              <h2 className="font-heading text-lg font-bold tracking-tight text-foreground">Where you can help</h2>
+              <p className="mt-1 text-sm text-muted">Tell SUFU where you operate. This can be local, nationwide or cross-border.</p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]">
+                <input value={areaCountry} onChange={(e) => setAreaCountry(e.target.value.toUpperCase().slice(0, 2))} maxLength={2} placeholder="Country code" aria-label="Country code" className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm uppercase" />
+                <input value={areaCity} onChange={(e) => setAreaCity(e.target.value)} placeholder="City (optional)" aria-label="Service city" className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm" />
+                <button type="button" disabled={areaBusy || areaCountry.length !== 2} onClick={async () => { setAreaBusy(true); const res = await addProfileServiceArea(user.id, { countryCode: areaCountry, city: areaCity }); setAreaBusy(false); if (res.error) { toast("Couldn’t add that service area"); return; } setAreaCity(""); setServiceAreas(await profileLocations(user.id)); toast("Service area added"); }} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary disabled:opacity-50">{areaBusy ? "Adding…" : "Add area"}</button>
+              </div>
+              {serviceAreas.length === 0 ? <p className="mt-4 text-sm text-muted">No service areas added yet.</p> : <div className="mt-4 flex flex-wrap gap-2">{serviceAreas.filter((a) => a.role === "service_area").map((area) => <span key={area.id} className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">{area.city ? area.city + ", " : ""}{area.countryName || area.countryCode}<button type="button" onClick={async () => { await removeProfileLocation(user.id, area.id); setServiceAreas(await profileLocations(user.id)); }} aria-label={"Remove " + (area.city || area.countryName) + " service area"} className="font-bold">×</button></span>)}</div>}
+            </section>
             {/* Saved listings — owner-only */}
             <section
               aria-label="Saved listings"
