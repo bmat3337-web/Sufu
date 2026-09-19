@@ -5,12 +5,12 @@ import { useAuth } from "../lib/auth";
 import { useToast } from "../components/Toast";
 import { getEngagement, updateEngagementStatus, type Engagement } from "../lib/engagements";
 import { getOrCreateConversation } from "../lib/api";
-import { submitReview } from "../lib/reviews";
+import { reviewForEngagement, submitReview } from "../lib/reviews";
 import { createPaymentIntent, paymentIntentsForUser, type PaymentIntent } from "../lib/paymentIntents";
 import { getEscrowForEngagement, requestEscrowFunding, releaseEscrow, type EscrowHold } from "../lib/escrow";
 
 const labels: Record<Engagement["status"], string> = { agreed: "Agreed", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled", disputed: "Disputed" };
-const paymentLabels: Record<PaymentIntent["status"], string> = { pending: "Payment pending", requires_action: "Payment action required", processing: "Payment processing", succeeded: "Payment confirmed", failed: "Payment failed", cancelled: "Payment cancelled", refunded: "Payment refunded" };
+const paymentLabels: Record<PaymentIntent["status"], string> = { pending: "Payment setup pending", requires_action: "Payment action required", processing: "Payment processing", succeeded: "Payment confirmed", failed: "Payment failed", cancelled: "Payment cancelled", refunded: "Payment refunded" };
 
 export default function EngagementPage({ id }: { id: string }) {
   const { user, openAuth } = useAuth();
@@ -25,39 +25,60 @@ export default function EngagementPage({ id }: { id: string }) {
 
   async function reload() {
     const next = await getEngagement(id); setEngagement(next);
-    if (user) {
-      const intents = await paymentIntentsForUser(user.id); setPayment(intents.find((item) => item.sourceType === "engagement" && item.sourceId === id) ?? null);
+    if (user && next) {
+      const [intents, existingReview] = await Promise.all([
+        paymentIntentsForUser(user.id),
+        reviewForEngagement(id, user.id),
+      ]);
+      setPayment(intents.find((item) => item.sourceType === "engagement" && item.sourceId === id) ?? null);
+      setReviewed(Boolean(existingReview));
+    } else {
+      setPayment(null); setReviewed(false);
     }
     setEscrow(await getEscrowForEngagement(id));
   }
   useEffect(() => { void reload(); }, [id, user?.id]);
 
   async function change(status: "in_progress" | "completed" | "cancelled" | "disputed") {
-    if (!user) { openAuth(); return; } setActing(true);
-    const result = await updateEngagementStatus(id, status); setActing(false);
-    if (result.error) { toast(result.error); return; } await reload();
+    if (!user) { openAuth(); return; }
+    setActing(true);
+    const result = await updateEngagementStatus(id, status);
+    setActing(false);
+    if (result.error) { toast(result.error); return; }
+    await reload();
     toast(status === "completed" ? "Work marked completed" : `Engagement ${status.replace("_", " ")}`);
   }
 
   async function preparePayment() {
-    if (!user) { openAuth(); return; } setActing(true);
+    if (!user) { openAuth(); return; }
+    setActing(true);
     const result = await createPaymentIntent("engagement", id, `engagement:${id}`);
     if (result.error) { setActing(false); toast(result.error); return; }
-    const intent = result.paymentIntent!; setPayment(intent);
-    const hold = await requestEscrowFunding(id, intent.id); setActing(false);
+    const intent = result.paymentIntent!;
+    setPayment(intent);
+    const hold = await requestEscrowFunding(id, intent.id);
+    setActing(false);
     if (hold.error) { toast(hold.error); return; }
-    setEscrow(hold.escrow!); toast("Payment intent prepared; funding confirmation is handled securely by the payment provider.");
+    setEscrow(hold.escrow!);
+    toast(intent.status === "succeeded" ? "Payment confirmed; escrow is ready for provider settlement." : "Payment setup recorded. Provider confirmation is still required before funds are marked secured.");
   }
 
   async function release() {
-    if (!user) { openAuth(); return; } setActing(true);
-    const result = await releaseEscrow(id); setActing(false);
-    if (result.error) { toast(result.error); return; } setEscrow(result.escrow!); toast("Escrow release requested");
+    if (!user) { openAuth(); return; }
+    setActing(true);
+    const result = await releaseEscrow(id);
+    setActing(false);
+    if (result.error) { toast(result.error); return; }
+    setEscrow(result.escrow!);
+    toast("Escrow released");
   }
 
   async function review() {
-    if (!user) { openAuth(); return; } if (!rating) { toast("Choose a rating first"); return; }
-    setActing(true); const result = await submitReview(id, rating, reviewBody); setActing(false);
+    if (!user) { openAuth(); return; }
+    if (!rating) { toast("Choose a rating first"); return; }
+    setActing(true);
+    const result = await submitReview(id, rating, reviewBody);
+    setActing(false);
     if (result.error) { toast(result.error.includes("ALREADY") ? "You already reviewed this engagement" : "We couldn't submit the review"); return; }
     setReviewed(true); toast("Review submitted");
   }
@@ -81,15 +102,19 @@ export default function EngagementPage({ id }: { id: string }) {
 
       <div className="mt-7 border-t border-border pt-6">
         <div className="flex flex-wrap gap-3 text-sm">
-          <span className="rounded-lg bg-background px-3 py-2">Requester</span><span className="rounded-lg bg-background px-3 py-2">Provider</span>
+          <span className="rounded-lg bg-background px-3 py-2">Requester</span>
+          <span className="rounded-lg bg-background px-3 py-2">Provider</span>
           <span className="rounded-lg bg-background px-3 py-2">{payment ? paymentLabels[payment.status] : "Payment not started"}</span>
           {escrow && <span className="rounded-lg bg-background px-3 py-2">Escrow: {escrow.status}</span>}
         </div>
         <div className="mt-5 grid gap-2">
           {canPay && <button disabled={acting} onClick={() => void preparePayment()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><WalletCards className="h-4 w-4" />Prepare payment & escrow</button>}
           {payment?.status === "succeeded" && !escrow && isRequester && <button disabled={acting} onClick={() => void preparePayment()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 py-3 font-semibold text-primary"><WalletCards className="h-4 w-4" />Secure funds in escrow</button>}
+          {payment?.status && payment.status !== "succeeded" && isRequester && engagement.status === "agreed" && <div className="rounded-xl bg-background p-4 text-sm text-muted">Payment rail action is not embedded here yet. The intent is recorded server-side and remains unmarked as funded until a trusted provider settlement confirms it.</div>}
+          {escrow?.status === "pending" && <div className="rounded-xl bg-background p-4 text-sm text-muted"><strong>Escrow prepared.</strong> Funds are not treated as secured until trusted settlement marks the hold funded.</div>}
           {escrow?.status === "funded" && <div className="rounded-xl bg-primary-soft p-4 text-sm text-primary"><strong>Funds secured.</strong> Payment is held until the engagement is completed and released by the requester.</div>}
           {engagement.status === "agreed" && isProvider && escrow?.status === "funded" && <button disabled={acting} onClick={() => void change("in_progress")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><CircleDot className="h-4 w-4" />Start work</button>}
+          {engagement.status === "agreed" && isProvider && escrow?.status !== "funded" && <div className="rounded-xl bg-background p-4 text-sm text-muted">Work starts after the engagement payment is securely funded.</div>}
           {engagement.status === "in_progress" && isRequester && <button disabled={acting} onClick={() => void change("completed")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><CheckCircle2 className="h-4 w-4" />Mark completed</button>}
           {canRelease && <button disabled={acting} onClick={() => void release()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><WalletCards className="h-4 w-4" />Release escrow</button>}
           {(engagement.status === "agreed" || engagement.status === "in_progress") && canAct && <div className="grid gap-2 sm:grid-cols-2"><button disabled={acting} onClick={() => void change("cancelled")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-semibold"><XCircle className="h-4 w-4" />Cancel</button><button disabled={acting} onClick={() => void change("disputed")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-3 font-semibold text-red-700"><ShieldAlert className="h-4 w-4" />Raise dispute</button></div>}
