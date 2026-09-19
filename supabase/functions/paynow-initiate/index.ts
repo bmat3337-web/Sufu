@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
   const reference = "SUFU-" + paymentIntentId.replaceAll("-", "").slice(0, 24);
   const returnUrl = appUrl.replace(/\/$/, "") + "/payment/return?payment_intent=" + encodeURIComponent(paymentIntentId);
-  const resultUrl = appUrl.replace(/\/$/, "") + "/functions/v1/paynow-result";
+  const resultUrl = url.replace(/\/$/, "") + "/functions/v1/paynow-result";
 
   const fields: Record<string, string> = {
     id: integrationId,
