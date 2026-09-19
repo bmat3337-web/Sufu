@@ -150,6 +150,9 @@ declare
   v_hold public.escrow_holds;
   v_event public.payment_reconciliation_events;
 begin
+  if coalesce(length(trim(p_provider)),0) < 2 then
+    raise exception 'INVALID_PROVIDER';
+  end if;
   if p_provider_event_id is null or length(trim(p_provider_event_id)) < 3 then
     raise exception 'INVALID_PROVIDER_EVENT_ID';
   end if;
@@ -161,6 +164,12 @@ begin
   if not found then raise exception 'PAYMENT_INTENT_NOT_FOUND'; end if;
   if p_amount_minor <> v_pi.amount_minor or upper(p_currency) <> upper(v_pi.currency) then
     raise exception 'SETTLEMENT_AMOUNT_MISMATCH';
+  end if;
+  if p_status = 'succeeded' and v_pi.status in ('failed','cancelled','refunded') then
+    raise exception 'INVALID_PAYMENT_STATE_TRANSITION';
+  end if;
+  if p_status = 'refunded' and v_pi.status not in ('succeeded','refunded') then
+    raise exception 'INVALID_REFUND_STATE_TRANSITION';
   end if;
 
   insert into public.payment_reconciliation_events(
