@@ -267,3 +267,28 @@ grant execute on function public.apply_payment_settlement(uuid,text,text,text,te
 
 comment on function public.apply_payment_settlement(uuid,text,text,text,text,text,bigint,text)
   is 'Trusted provider settlement boundary. Idempotently records provider events, updates payment intent state, and funds matching engagement escrow only on a verified succeeded settlement.';
+
+
+-- C.19: immutable provider-neutral adapter contract.
+-- Live provider credentials and webhook verification belong in trusted infrastructure.
+create table if not exists public.payment_provider_events (
+  id uuid primary key default gen_random_uuid(),
+  provider text not null check (length(trim(provider)) >= 2),
+  provider_event_id text not null,
+  event_type text not null,
+  payment_intent_id uuid references public.payment_intents(id) on delete restrict,
+  provider_transaction_id text,
+  status text not null default 'received' check (status in ('received','verified','rejected','processed')),
+  received_at timestamptz not null default now(),
+  verified_at timestamptz,
+  processed_at timestamptz,
+  unique(provider, provider_event_id)
+);
+
+create index if not exists payment_provider_events_intent_idx
+  on public.payment_provider_events(payment_intent_id, received_at desc);
+
+alter table public.payment_provider_events enable row level security;
+revoke all on public.payment_provider_events from anon, authenticated;
+
+comment on table public.payment_provider_events is 'Provider adapter event ledger. Verification and processing are trusted-worker responsibilities; credentials never enter this table.';
