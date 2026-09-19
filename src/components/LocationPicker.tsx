@@ -6,6 +6,7 @@ import {
 } from "react";
 import { Check, ChevronDown, MapPin } from "lucide-react";
 import { fetchCities, fetchCountries } from "../lib/api";
+import { COUNTRY_CONFIGS } from "../lib/globalization";
 import type { Location } from "../data";
 
 interface LocationPickerProps {
@@ -31,6 +32,7 @@ export default function LocationPicker({
   const [open, setOpen] = useState(false);
   const [countries, setCountries] = useState<{ code: string; name: string; defaultCurrency: string }[]>([]);
   const [cities, setCities] = useState<{ name: string; suburbs: string[] }[]>([]);
+  const [countryCities, setCountryCities] = useState<{ name: string; suburbs: string[] }[]>([]);
   const [locationsError, setLocationsError] = useState(false);
   const [cityIndex, setCityIndex] = useState(0);
   const [suburbIndex, setSuburbIndex] = useState(0);
@@ -58,11 +60,12 @@ export default function LocationPicker({
 
   // Re-sync the highlighted city once live locations arrive.
   useEffect(() => {
-    const idx = cities.findIndex((c) => c.name === value.city);
+    const idx = availableCities.findIndex((c) => c.name === value.city);
     if (idx >= 0) setCityIndex(idx);
   }, [cities, value.city]);
 
-  const city = cities[cityIndex] ?? cities[0];
+  const availableCities = countryCities;
+  const city = availableCities[cityIndex] ?? availableCities[0];
   const suburbs = city?.suburbs ?? [];
   const shownSuburb =
     value.suburb && suburbs.includes(value.suburb) ? value.suburb : suburbs[suburbIndex] ?? "";
@@ -88,6 +91,12 @@ export default function LocationPicker({
     };
   }, [open]);
 
+  useEffect(() => {
+    // Until a full geography provider is connected, keep the picker honest: countries without local city data show the country and allow manual city entry through the global model rather than pretending Zimbabwe suburbs exist there.
+    if (countryCode === "ZW") setCountryCities(cities);
+    else setCountryCities([]);
+  }, [countryCode, cities]);
+
   function pickCountry(code: string) {
     setCountryCode(code);
     onChange({ ...value, countryCode: code, city: "", suburb: "" });
@@ -110,15 +119,15 @@ export default function LocationPicker({
   }
 
   function handleCityKey(event: ReactKeyboardEvent<HTMLUListElement>) {
-    if (cities.length === 0) return;
+    if (availableCities.length === 0) return;
     const move = (next: number) => {
       event.preventDefault();
-      pickCity(cities[next].name);
+      pickCity(availableCities[next].name);
     };
-    if (event.key === "ArrowDown") move((cityIndex + 1) % cities.length);
-    else if (event.key === "ArrowUp") move((cityIndex - 1 + cities.length) % cities.length);
+    if (event.key === "ArrowDown") move((cityIndex + 1) % availableCities.length);
+    else if (event.key === "ArrowUp") move((cityIndex - 1 + availableCities.length) % availableCities.length);
     else if (event.key === "Home") move(0);
-    else if (event.key === "End") move(cities.length - 1);
+    else if (event.key === "End") move(availableCities.length - 1);
   }
 
   function handleSuburbKey(event: ReactKeyboardEvent<HTMLUListElement>) {
@@ -152,7 +161,7 @@ export default function LocationPicker({
       >
         <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         <span className="max-w-[9rem] truncate sm:max-w-none">
-          {countries.find((c) => c.code === countryCode)?.name ?? countryCode}{value.city ? ` · ${value.city}` : ""}
+          {countries.find((c) => c.code === countryCode)?.name ?? countryCode}{value.city ? ` · ${value.city || "Choose a city"}` : ""}
           {shownSuburb ? ` · ${shownSuburb}` : ""}
         </span>
         <ChevronDown
