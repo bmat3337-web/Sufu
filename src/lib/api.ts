@@ -62,6 +62,7 @@ interface ListingRow {
   status: string;
   views: number;
   featured: boolean;
+  cover_image_url: string | null;
   tags: string[];
   posted_at: string;
 }
@@ -126,6 +127,7 @@ function toListing(row: ListingRow): Listing {
     views: row.views,
     tags: row.tags ?? [],
     featured: row.featured,
+    coverImageUrl: row.cover_image_url ?? undefined,
   };
 }
 
@@ -370,6 +372,7 @@ export interface NewListingInput {
   remote?: boolean;
   city?: string;
   suburb?: string;
+  coverImageUrl?: string;
 }
 
 /**
@@ -396,11 +399,17 @@ export async function createListing(
   if (input.employmentType) row.employment_type = input.employmentType;
   if (input.city) row.city = input.city;
   if (input.suburb) row.suburb = input.suburb;
+  if (input.coverImageUrl) row.cover_image_url = input.coverImageUrl;
 
   const { data, error } = await supabase.from("listings").insert(row).select("id").single();
   if (error) return { error: error.message };
   const created = (Array.isArray(data) ? data[0] : data) as { id?: string } | null;
   return { id: created?.id };
+}
+
+export async function setListingCoverImage(listingId: string, coverImageUrl: string): Promise<{ error?: string }> {
+  const { error } = await supabase.from("listings").update({ cover_image_url: coverImageUrl }).eq("id", listingId);
+  return error ? { error: "The listing image could not be saved." } : {};
 }
 
 export interface ProfilePatch {
