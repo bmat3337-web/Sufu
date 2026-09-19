@@ -30,7 +30,7 @@ export default function Hero() {
       <div className="mx-auto max-w-3xl text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3.5 py-1.5 text-sm font-medium text-primary"><Sparkles className="h-4 w-4 text-gold" aria-hidden="true" />Harare · Bulawayo · Zimbabwe — more cities soon</p>
         <h1 className="mt-6 font-heading text-4xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-5xl">{greeting()}.<br /><span className="text-primary">Need something? Sufu it.</span></h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted">{SUFU_LANGUAGE.promise}</p>
+        <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted">{SUFU_LANGUAGE.promise}</p><p className="mx-auto mt-3 max-w-lg text-sm font-medium text-primary/90">Need something good? Sufu it.</p>
         <form onSubmit={handleSubmit} role="search" className="mt-8">
           <label htmlFor="sufu-search" className="sr-only">Search SUFU</label>
           <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-2.5 shadow-lg shadow-foreground/5 sm:flex-row sm:items-center">
