@@ -22,6 +22,7 @@ export default function ExplorePage() {
   const { params } = useRoute();
   const [query, setQuery] = useState(params.get("q") ?? "");
   const [group, setGroup] = useState(params.get("group") ?? "all");
+  const [country, setCountry] = useState(params.get("country") ?? "ZW");
   const [city, setCity] = useState(params.get("city") ?? "Harare");
   const [suburb, setSuburb] = useState(params.get("suburb") ?? "");
   const [sort, setSort] = useState<SortKey>((params.get("sort") as SortKey) ?? "newest");
@@ -38,6 +39,7 @@ export default function ExplorePage() {
   useEffect(() => {
     setQuery(params.get("q") ?? "");
     setGroup(params.get("group") ?? "all");
+    setCountry(params.get("country") ?? "ZW");
     setCity(params.get("city") ?? "Harare");
     setSuburb(params.get("suburb") ?? "");
     setSort((params.get("sort") as SortKey) ?? "newest");
@@ -64,6 +66,7 @@ export default function ExplorePage() {
               group: group === "all" ? undefined : (group as Group),
               city,
               suburb,
+              country,
               sort,
               latitude: coords?.latitude,
               longitude: coords?.longitude,
@@ -81,21 +84,23 @@ export default function ExplorePage() {
     }
     load().catch(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [query, group, city, suburb, sort, showBusinesses, coords, nearMe, radiusKm]);
+  }, [query, group, country, city, suburb, sort, showBusinesses, coords, nearMe, radiusKm]);
 
   const count = listings.length + providers.length;
   const visibleChips = group === "all" ? [] : chipCategories.filter((c) => c.group === group);
 
-  function sync(next: { q?: string; group?: string; city?: string; suburb?: string; sort?: SortKey; radius?: number }) {
+  function sync(next: { q?: string; group?: string; country?: string; city?: string; suburb?: string; sort?: SortKey; radius?: number }) {
     const p = new URLSearchParams();
     const q = next.q ?? query;
     const g = next.group ?? group;
+    const co = next.country ?? country;
     const c = next.city ?? city;
     const s = next.suburb ?? suburb;
     const so = next.sort ?? sort;
     const r = next.radius ?? radiusKm;
     if (q.trim()) p.set("q", q.trim());
     if (g !== "all") p.set("group", g);
+    if (co) p.set("country", co);
     if (c) p.set("city", c);
     if (s) p.set("suburb", s);
     p.set("sort", so);
@@ -122,7 +127,7 @@ export default function ExplorePage() {
   }
 
   function clearFilters() {
-    setQuery(""); setGroup("all"); setCity("Harare"); setSuburb(""); setSort("newest");
+    setQuery(""); setGroup("all"); setCountry("ZW"); setCity("Harare"); setSuburb(""); setSort("newest");
     setNearMe(false); setCoords(null); setLocationError(null); setRadiusKm(25); navigate("/explore");
   }
 
@@ -144,7 +149,7 @@ export default function ExplorePage() {
       <div className="mt-5 flex flex-wrap items-center gap-2">
         {typeTabs.map((tab) => <button key={tab.id} type="button" aria-pressed={group === tab.id} onClick={() => updateGroup(tab.id)} className={`inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-sm font-semibold ${group === tab.id ? "border-primary bg-primary text-on-primary" : "border-border bg-surface text-foreground hover:border-primary/50"}`}>{tab.label}</button>)}
         <span className="mx-1 hidden h-6 w-px bg-border sm:block" />
-        <LocationPicker value={{ city, suburb }} onChange={updateLocation} idPrefix="explore" compact />
+        <LocationPicker value={{ city, suburb, countryCode: country }} onChange={(loc) => { setCountry(loc.countryCode ?? "ZW"); updateLocation(loc); }} idPrefix="explore" compact />
         <button type="button" onClick={useCurrentLocation} className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${nearMe ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface text-foreground"}`}><LocateFixed className="h-4 w-4" aria-hidden="true" />{nearMe ? "Near me" : "Use my location"}</button>
         {nearMe && <select value={radiusKm} onChange={(e) => { const r = Number(e.target.value); setRadiusKm(r); sync({ radius: r }); }} aria-label="Search radius" className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground"><option value={5}>5 km</option><option value={10}>10 km</option><option value={25}>25 km</option><option value={50}>50 km</option><option value={100}>100 km</option></select>}
         <div className="ml-auto flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 text-muted" aria-hidden="true" /><select value={sort} onChange={(e) => updateSort(e.target.value as SortKey)} aria-label="Sort results" className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground">{sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
@@ -152,7 +157,7 @@ export default function ExplorePage() {
       {locationError && <p className="mt-3 text-sm text-muted" role="alert">{locationError}</p>}
 
       {visibleChips.length > 0 && <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">{visibleChips.map((cat) => <button key={cat.name} type="button" onClick={() => { setQuery(cat.name); sync({ q: cat.name }); }} className="shrink-0 rounded-full border border-border bg-surface px-3.5 py-1.5 text-sm font-medium hover:border-primary/50 hover:text-primary">{cat.name}</button>)}</div>}
-      <p className="mt-6 text-sm text-muted" role="status">{count} {count === 1 ? "result" : "results"}{nearMe ? ` within ${radiusKm} km` : city ? ` in ${city}` : ""}{suburb ? ` · ${suburb}` : ""}</p>
+      <p className="mt-6 text-sm text-muted" role="status">{count} {count === 1 ? "result" : "results"}{nearMe ? ` within ${radiusKm} km` : city ? ` in ${city}` : ""}{suburb ? ` · ${suburb}` : ""}{country ? ` · ${country}` : ""}</p>
 
       {loading && count === 0 ? <div className="mt-3 grid gap-3 sm:grid-cols-2" role="status" aria-label="Loading results">{Array.from({ length: 4 }, (_, i) => showBusinesses ? <ProviderCardSkeleton key={i} /> : <ListingCardSkeleton key={i} />)}</div> : count > 0 ? <div className="mt-3 grid gap-3 sm:grid-cols-2">{showBusinesses ? providers.map((provider) => <ProviderCard key={provider.id} provider={provider} />) : listings.map((listing) => <ListingCard key={listing.id} listing={listing} provider={providerMap[listing.providerId]} />)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-border bg-surface/60 px-6 py-16 text-center"><Search className="mx-auto h-7 w-7 text-muted" aria-hidden="true" /><h2 className="mt-5 font-heading text-2xl font-bold tracking-tight text-foreground">Nothing matched that search</h2><p className="mx-auto mt-2 max-w-sm text-muted">Try a broader word, or clear the filters — your match is out there somewhere.</p><button type="button" onClick={clearFilters} className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full border border-primary bg-surface px-6 py-2.5 font-semibold text-primary">Clear filters</button></div>}
     </div>
