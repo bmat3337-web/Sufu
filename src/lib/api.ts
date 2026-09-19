@@ -386,6 +386,7 @@ export interface NewListingInput {
   remote?: boolean;
   city?: string;
   suburb?: string;
+  countryCode?: string;
   coverImageUrl?: string;
 }
 
@@ -413,6 +414,7 @@ export async function createListing(
   if (input.employmentType) row.employment_type = input.employmentType;
   if (input.city) row.city = input.city;
   if (input.suburb) row.suburb = input.suburb;
+  if (input.countryCode) row.supply_country_code = input.countryCode.toUpperCase();
   if (input.coverImageUrl) row.cover_image_url = input.coverImageUrl;
 
   const { data, error } = await supabase.from("listings").insert(row).select("id").single();
