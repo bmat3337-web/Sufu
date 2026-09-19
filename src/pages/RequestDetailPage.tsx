@@ -6,6 +6,7 @@ import { useToast } from "../components/Toast";
 import { createOffer, offersForRequest, getRequest, acceptRequestOffer, updateOfferStatus, type RequestOffer, type SufuRequest } from "../lib/requests";
 import { getOrCreateConversation } from "../lib/api";
 import { SufuJourney } from "../components/SufuJourney";
+import { FileCheck2, HandCoins } from "lucide-react";
 
 export default function RequestDetailPage({ id }: { id: string }) {
   const { user, openAuth } = useAuth();
@@ -65,7 +66,8 @@ export default function RequestDetailPage({ id }: { id: string }) {
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-8 lg:px-8">
-      <Link to="/requests" className="text-sm font-semibold text-primary hover:underline">← All requests</Link>
+      <SufuJourney stage={hasAccepted ? "connected" : "need"} />
+      <Link to="/requests" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">← All requests</Link>
       <div className="mt-5 grid gap-6 lg:grid-cols-[1.25fr_.75fr]">
         <article className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
           <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">{request.requestType}</span><span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted">{request.status}</span></div>
@@ -89,6 +91,8 @@ export default function RequestDetailPage({ id }: { id: string }) {
           </div>
         </form>}
       </div>
+
+      <section className="mt-8 rounded-[24px] border border-border/70 bg-[#fffdf7] p-5"><div className="flex flex-wrap items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-soft text-primary"><HandCoins className="h-5 w-5"/></span><div><p className="text-sm font-semibold text-foreground">A SUFU offer is more than a message</p><p className="text-sm text-muted">Clear price, availability, duration and terms turn demand into an actionable agreement.</p></div></div></section>
 
       <section className="mt-8">
         <div className="flex items-end justify-between gap-3"><div><h2 className="font-heading text-2xl font-bold text-foreground">{isOwner ? "Offers received" : "Provider offers"}</h2><p className="mt-1 text-sm text-muted">{offers.length} {offers.length === 1 ? "proposal" : "proposals"}</p></div></div>
