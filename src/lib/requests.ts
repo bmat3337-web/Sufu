@@ -6,7 +6,7 @@ export type OfferStatus = "pending" | "accepted" | "declined" | "withdrawn";
 export interface SufuRequest {
   id: string; requesterId: string; title: string; description: string;
   category: string | null; requestType: RequestCategory; budget: number | null;
-  currency: string; city: string | null; suburb: string | null;
+  currency: string; city: string | null; suburb: string | null; countryCode: string | null; targetCountryCode: string | null; crossBorder: boolean | null;
   preferredDate: string | null; status: "open" | "matched" | "closed" | "cancelled"; createdAt: string;
 }
 export interface RequestOffer {
@@ -16,7 +16,7 @@ export interface RequestOffer {
 }
 export interface CreateRequestInput {
   title: string; description: string; category?: string; requestType: RequestCategory;
-  budget?: number; currency?: string; city: string; suburb?: string; preferredDate?: string;
+  budget?: number; currency?: string; city: string; suburb?: string; countryCode?: string; targetCountryCode?: string; preferredDate?: string;
 }
 export interface CreateOfferInput {
   requestId: string; providerId: string; price?: number; currency?: string;
@@ -29,6 +29,7 @@ function mapRequest(row: Record<string, unknown>): SufuRequest {
     description: String(row.description ?? ""), category: row.category == null ? null : String(row.category),
     requestType: String(row.request_type ?? "service") as RequestCategory,
     budget: row.budget == null ? null : Number(row.budget), currency: String(row.currency ?? "USD"),
+    countryCode: row.origin_country_code == null ? null : String(row.origin_country_code), targetCountryCode: row.target_country_code == null ? null : String(row.target_country_code), crossBorder: row.cross_border == null ? null : Boolean(row.cross_border),
     city: row.city == null ? null : String(row.city), suburb: row.suburb == null ? null : String(row.suburb),
     preferredDate: row.preferred_date == null ? null : String(row.preferred_date),
     status: String(row.status ?? "open") as SufuRequest["status"], createdAt: String(row.created_at ?? ""),
@@ -49,7 +50,7 @@ export async function createRequest(userId: string, input: CreateRequestInput): 
     requester_id: userId, title: input.title.trim(), description: input.description.trim(),
     category: input.category?.trim() || null, request_type: input.requestType,
     budget: input.budget ?? null, currency: input.currency ?? "USD", city: input.city.trim(),
-    suburb: input.suburb?.trim() || null, preferred_date: input.preferredDate || null, status: "open",
+    suburb: input.suburb?.trim() || null, origin_country_code: input.countryCode ?? "ZW", target_country_code: input.targetCountryCode ?? input.countryCode ?? "ZW", preferred_date: input.preferredDate || null, status: "open",
   }).select("id").single();
   if (error) return { error: error.message };
   return { id: data?.id };
@@ -57,7 +58,7 @@ export async function createRequest(userId: string, input: CreateRequestInput): 
 
 export async function getRequest(id: string): Promise<SufuRequest | null> {
   const { data, error } = await supabase.from("requests")
-    .select("id,requester_id,title,description,category,request_type,budget,currency,city,suburb,preferred_date,status,created_at")
+    .select("id,requester_id,title,description,category,request_type,budget,currency,city,suburb,origin_country_code,target_country_code,cross_border,preferred_date,status,created_at")
     .eq("id", id).maybeSingle();
   if (error || !data) return null;
   return mapRequest(data as Record<string, unknown>);
