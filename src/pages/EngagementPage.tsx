@@ -9,6 +9,7 @@ import { reviewForEngagement, submitReview } from "../lib/reviews";
 import { createPaymentIntent, paymentIntentsForUser, startPaynowCheckout, type PaymentIntent } from "../lib/paymentIntents";
 import { getEscrowForEngagement, requestEscrowFunding, releaseEscrow, type EscrowHold } from "../lib/escrow";
 import { SufuJourney } from "../components/SufuJourney";
+import { SufuItChips } from "../components/SufuItChips";
 
 const labels: Record<Engagement["status"], string> = { agreed: "Agreed", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled", disputed: "Disputed" };
 const paymentLabels: Record<PaymentIntent["status"], string> = { pending: "Payment setup pending", requires_action: "Payment action required", processing: "Payment processing", succeeded: "Payment confirmed", failed: "Payment failed", cancelled: "Payment cancelled", refunded: "Payment refunded" };
@@ -100,7 +101,8 @@ export default function EngagementPage({ id }: { id: string }) {
   const canPay = isRequester && engagement.status === "agreed" && (!payment || ["failed", "cancelled"].includes(payment.status));
   const canRelease = isRequester && engagement.status === "completed" && escrow?.status === "funded";
 
-  return <div className="mx-auto max-w-3xl px-5 py-8 lg:px-8">
+  return <div className="mx-auto max-w-3xl px-5 py-8 lg:px-8"><SufuJourney stage={engagement.status === "completed" ? "done" : "doing"} />
+    <div className="mt-4 rounded-[24px] border border-border/70 bg-[#fffdf7] p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold text-primary">SUFU engagement</p><h2 className="mt-1 text-xl font-bold text-foreground">You found it. Now get it done.</h2><p className="mt-1 text-sm text-muted">Keep the agreement, conversation, payment and completion together.</p></div><CircleDot className="mt-1 h-5 w-5 text-primary" /></div><div className="mt-4"><SufuItChips onSelect={(value) => toast(`Need something else? Sufu it: ${value}`)} /></div></div>
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-semibold text-primary"><CircleDot className="h-4 w-4" />{labels[engagement.status]}</span>
