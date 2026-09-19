@@ -54,7 +54,7 @@ export default function PostPage() {
   const [condition, setCondition] = useState(conditions[0]);
   const [employmentType, setEmploymentType] = useState(employmentTypes[0]);
   const [remote, setRemote] = useState(false);
-  const [location, setLocation] = useState<Location>({ city: "Harare", suburb: "Avondale" });
+  const [location, setLocation] = useState<Location>({ city: "Harare", suburb: "Avondale", countryCode: "ZW" });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -101,6 +101,7 @@ export default function PostPage() {
         bio: description,
         city: location.city,
         suburb: location.suburb,
+        countryCode: location.countryCode ?? "ZW",
         is_business: true,
       });
     } else {
@@ -146,7 +147,7 @@ export default function PostPage() {
     setCoverImage(null);
     setPrice("");
     setCategory("");
-    setLocation({ city: "Harare", suburb: "Avondale" });
+    setLocation({ city: "Harare", suburb: "Avondale", countryCode: "ZW" });
     setError(null);
   }
 
