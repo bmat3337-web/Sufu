@@ -72,3 +72,14 @@ export async function paymentIntentsForUser(userId: string): Promise<PaymentInte
     .order("created_at", { ascending: false });
   return error ? [] : (data ?? []).map((row) => map(row as Record<string, unknown>));
 }
+
+export async function startPaynowCheckout(paymentIntentId: string): Promise<{ browserUrl?: string; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("paynow-initiate", {
+    body: { payment_intent_id: paymentIntentId },
+  });
+  if (error) return { error: error.message };
+  if (!data?.ok || typeof data.browser_url !== "string") {
+    return { error: data?.error ?? "Paynow checkout could not be started." };
+  }
+  return { browserUrl: data.browser_url };
+}
