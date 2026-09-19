@@ -436,6 +436,9 @@ export interface ProfilePatch {
   bio?: string;
   city?: string;
   suburb?: string;
+  origin_country_code?: string;
+  primary_currency?: string;
+  preferred_locale?: string;
 }
 
 /** Keys a client may self-edit. Everything else (verified_*, rating, views, …) is
@@ -449,6 +452,9 @@ const OWN_PROFILE_PATCH_KEYS = [
   "bio",
   "city",
   "suburb",
+  "origin_country_code",
+  "primary_currency",
+  "preferred_locale",
 ] as const;
 
 /** Update the signed-in user's own profile row (RLS: id = auth.uid()). */
@@ -473,6 +479,36 @@ export interface ProfileLocation {
   city: string | null;
   regionName: string | null;
   radiusKm: number | null;
+}
+
+export async function addListingGeography(
+  listingId: string,
+  ownerId: string,
+  input: { countryCode: string; city?: string; role: "supply" | "service_area" | "fulfilment" | "workplace" }
+): Promise<{ error?: string }> {
+  const { data: location, error: locationError } = await supabase
+    .from("sufu_locations")
+    .insert({
+      country_code: input.countryCode.toUpperCase(),
+      city: input.city?.trim() || null,
+      privacy: "area",
+      source: "manual",
+      created_by: ownerId,
+    })
+    .select("id")
+    .single();
+  if (locationError || !location) return { error: locationError?.message ?? "Could not create listing location" };
+  const { error } = await supabase.from("listing_locations").insert({
+    listing_id: listingId,
+    location_id: location.id,
+    role: input.role,
+    is_primary: true,
+  });
+  if (error) {
+    await supabase.from("sufu_locations").delete().eq("id", location.id).eq("created_by", ownerId);
+    return { error: error.message };
+  }
+  return {};
 }
 
 export async function profileLocations(profileId: string): Promise<ProfileLocation[]> {
