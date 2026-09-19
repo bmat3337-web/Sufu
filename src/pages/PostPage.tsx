@@ -11,9 +11,10 @@ import {
 import { Link } from "../router";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../lib/auth";
-import { createListing, updateOwnProfile, fetchCategories } from "../lib/api";
+import { createListing, setListingCoverImage, updateOwnProfile, fetchCategories } from "../lib/api";
 import LocationPicker from "../components/LocationPicker";
 import { formatUSD, type Group, type Location } from "../data";
+import { uploadListingCoverImage } from "../lib/media";
 
 type DraftType = "service" | "product" | "job" | "business";
 
@@ -46,6 +47,7 @@ export default function PostPage() {
   const [draftType, setDraftType] = useState<DraftType>("service");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [condition, setCondition] = useState(conditions[0]);
@@ -122,6 +124,14 @@ export default function PostPage() {
       return;
     }
 
+    if (draftType !== "business" && result.id && coverImage) {
+      const uploaded = await uploadListingCoverImage(coverImage, user.id);
+      if (uploaded.url) {
+        await setListingCoverImage(result.id, uploaded.url);
+      } else if (uploaded.error) {
+        toast("Listing published, but the cover image could not be saved.");
+      }
+    }
     setPublishedId(result.id ?? null);
     setSubmitted(true);
     toast(draftType === "business" ? "Your business profile is live" : "Your listing is live");
@@ -132,6 +142,7 @@ export default function PostPage() {
     setPublishedId(null);
     setTitle("");
     setDescription("");
+    setCoverImage(null);
     setPrice("");
     setCategory("");
     setLocation({ city: "Harare", suburb: "Avondale" });
@@ -361,6 +372,23 @@ export default function PostPage() {
                   />
                   This job can be done remotely
                 </label>
+              </div>
+            )}
+
+            {draftType !== "business" && (
+              <div>
+                <label htmlFor="post-cover-image" className="text-sm font-semibold text-foreground">
+                  Cover image <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id="post-cover-image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => setCoverImage(event.target.files?.[0] ?? null)}
+                  className="mt-1.5 block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:font-semibold file:text-primary"
+                />
+                <p className="mt-1.5 text-xs text-muted">JPG, PNG or WebP · up to 5 MB. Use a clear photo of the product, work or service.</p>
+                {coverImage && <p className="mt-1.5 text-sm font-medium text-primary">{coverImage.name}</p>}
               </div>
             )}
 
