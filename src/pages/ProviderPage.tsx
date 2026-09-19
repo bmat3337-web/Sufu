@@ -21,6 +21,8 @@ import { DetailSkeleton } from "../components/SkeletonCards";
 import { formatUSD, type Provider, type VerificationId } from "../data";
 import { getOrCreateConversation, providerById } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { SufuJourney } from "../components/SufuJourney";
+import { SufuItChips } from "../components/SufuItChips";
 
 const trustSteps: { id: string; label: string; needs: VerificationId[] }[] = [
   { id: "new", label: "New", needs: [] },
@@ -143,7 +145,7 @@ export default function ProviderPage({ id }: { id: string }) {
         Explore
       </Link>
 
-      {/* Profile header */}
+      <div className="mt-4 rounded-[24px] border border-border/70 bg-[#fffdf7] p-5"><p className="text-sm font-semibold text-primary">Found someone who can help?</p><h2 className="mt-1 text-xl font-bold text-foreground">Sufu this connection.</h2><p className="mt-1 text-sm text-muted">Start a conversation, ask for what you need, and turn the match into an outcome.</p><div className="mt-4"><SufuItChips onSelect={(value) => toast(`Need something else? Sufu it: ${value}`)} /></div></div>\n\n      {/* Profile header */}
       <div className="mt-4 rounded-3xl border border-border bg-surface p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <span
