@@ -11,7 +11,7 @@ import {
 import { Link } from "../router";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../lib/auth";
-import { createListing, setListingCoverImage, updateOwnProfile, fetchCategories } from "../lib/api";
+import { createListing, setListingCoverImage, updateOwnProfile, fetchCategories, addListingGeography } from "../lib/api";
 import LocationPicker from "../components/LocationPicker";
 import { formatUSD, type Group, type Location } from "../data";
 import { uploadListingCoverImage } from "../lib/media";
@@ -101,7 +101,7 @@ export default function PostPage() {
         bio: description,
         city: location.city,
         suburb: location.suburb,
-        countryCode: location.countryCode ?? "ZW",
+        origin_country_code: location.countryCode ?? "ZW",
         is_business: true,
       });
     } else {
@@ -117,6 +117,7 @@ export default function PostPage() {
         remote: draftType === "job" ? remote : undefined,
         city: location.city,
         suburb: location.suburb,
+        countryCode: location.countryCode ?? "ZW",
       });
     }
     setSaving(false);
@@ -124,6 +125,11 @@ export default function PostPage() {
     if (result.error) {
       setError("We couldn't publish that — please try again.");
       return;
+    }
+
+    if (draftType !== "business" && result.id) {
+      const geographyRole = draftType === "job" ? "workplace" : draftType === "service" ? "service_area" : "fulfilment";
+      await addListingGeography(result.id, user.id, { countryCode: location.countryCode ?? "ZW", city: location.city, role: geographyRole });
     }
 
     if (draftType !== "business" && result.id && coverImage) {
