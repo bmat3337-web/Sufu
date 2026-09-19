@@ -6,7 +6,7 @@ import { useToast } from "../components/Toast";
 import { getEngagement, updateEngagementStatus, type Engagement } from "../lib/engagements";
 import { getOrCreateConversation } from "../lib/api";
 import { reviewForEngagement, submitReview } from "../lib/reviews";
-import { createPaymentIntent, paymentIntentsForUser, type PaymentIntent } from "../lib/paymentIntents";
+import { createPaymentIntent, paymentIntentsForUser, startPaynowCheckout, type PaymentIntent } from "../lib/paymentIntents";
 import { getEscrowForEngagement, requestEscrowFunding, releaseEscrow, type EscrowHold } from "../lib/escrow";
 
 const labels: Record<Engagement["status"], string> = { agreed: "Agreed", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled", disputed: "Disputed" };
@@ -63,6 +63,15 @@ export default function EngagementPage({ id }: { id: string }) {
     toast(intent.status === "succeeded" ? "Payment confirmed; escrow is ready for provider settlement." : "Payment setup recorded. Provider confirmation is still required before funds are marked secured.");
   }
 
+  async function payWithPaynow() {
+    if (!payment) { toast("Prepare the payment first"); return; }
+    setActing(true);
+    const result = await startPaynowCheckout(payment.id);
+    setActing(false);
+    if (result.error) { toast(result.error); return; }
+    window.location.assign(result.browserUrl!);
+  }
+
   async function release() {
     if (!user) { openAuth(); return; }
     setActing(true);
@@ -110,7 +119,8 @@ export default function EngagementPage({ id }: { id: string }) {
         <div className="mt-5 grid gap-2">
           {canPay && <button disabled={acting} onClick={() => void preparePayment()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><WalletCards className="h-4 w-4" />Prepare payment & escrow</button>}
           {payment?.status === "succeeded" && !escrow && isRequester && <button disabled={acting} onClick={() => void preparePayment()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 py-3 font-semibold text-primary"><WalletCards className="h-4 w-4" />Secure funds in escrow</button>}
-          {payment?.status && payment.status !== "succeeded" && isRequester && engagement.status === "agreed" && <div className="rounded-xl bg-background p-4 text-sm text-muted">Payment rail action is not embedded here yet. The intent is recorded server-side and remains unmarked as funded until a trusted provider settlement confirms it.</div>}
+          {payment?.status && payment.status !== "succeeded" && isRequester && engagement.status === "agreed" && <div className="rounded-xl bg-background p-4 text-sm text-muted">Your payment is not yet confirmed. Paynow can open the secure provider checkout; SUFU will only mark the payment successful after Paynow's verified server callback.</div>}
+          {payment && isRequester && ["pending","requires_action","processing"].includes(payment.status) && payment.currency === "USD" && <button disabled={acting} onClick={() => void payWithPaynow()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 py-3 font-semibold text-primary disabled:opacity-60"><WalletCards className="h-4 w-4" />{payment.status === "processing" ? "Continue Paynow payment" : "Pay securely with Paynow"}</button>}
           {escrow?.status === "pending" && <div className="rounded-xl bg-background p-4 text-sm text-muted"><strong>Escrow prepared.</strong> Funds are not treated as secured until trusted settlement marks the hold funded.</div>}
           {escrow?.status === "funded" && <div className="rounded-xl bg-primary-soft p-4 text-sm text-primary"><strong>Funds secured.</strong> Payment is held until the engagement is completed and released by the requester.</div>}
           {engagement.status === "agreed" && isProvider && escrow?.status === "funded" && <button disabled={acting} onClick={() => void change("in_progress")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-on-primary disabled:opacity-60"><CircleDot className="h-4 w-4" />Start work</button>}
