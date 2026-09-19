@@ -6,7 +6,6 @@ import {
 } from "react";
 import { Check, ChevronDown, MapPin } from "lucide-react";
 import { fetchCities, fetchCountries } from "../lib/api";
-import { COUNTRY_CONFIGS } from "../lib/globalization";
 import type { Location } from "../data";
 
 interface LocationPickerProps {
