@@ -8,6 +8,7 @@ import { ListingCardSkeleton, ProviderCardSkeleton } from "../components/Skeleto
 import { categoryGroups, type Group, type Listing, type Provider, type SortKey } from "../data";
 import { fetchCategories, providersByIds, searchProviders } from "../lib/api";
 import { discoverListings } from "../lib/discovery";
+import { SufuJourney } from "../components/SufuJourney";
 
 const typeTabs = [{ id: "all", label: "All" }, ...categoryGroups.map((g) => ({ id: g.id, label: g.label }))];
 const sortOptions: { value: SortKey; label: string }[] = [
@@ -126,7 +127,7 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8"><SufuJourney stage="matched" />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">Explore SUFU</h1><p className="mt-1 text-muted">Services, products, jobs and businesses — all around you.</p></div>
         <Link to="/post" className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary"><Plus className="h-4 w-4" aria-hidden="true" />Post</Link>
