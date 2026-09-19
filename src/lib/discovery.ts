@@ -14,6 +14,8 @@ interface DiscoveryRow {
   remote: boolean;
   city: string | null;
   suburb: string | null;
+  supply_country_code: string | null;
+  fulfilment_country_code: string | null;
   provider_id: string;
   status: string;
   views: number;
@@ -36,7 +38,7 @@ const toListing = (row: DiscoveryRow): Listing => ({
   condition: row.condition ?? undefined,
   employmentType: row.employment_type ?? undefined,
   remote: row.remote,
-  location: { city: row.city ?? "", suburb: row.suburb ?? "" } satisfies Location,
+  location: { city: row.city ?? "", suburb: row.suburb ?? "", countryCode: row.supply_country_code ?? undefined } satisfies Location,
   providerId: row.provider_id,
   postedAt: row.posted_at,
   views: row.views,
@@ -66,13 +68,14 @@ export interface DiscoveryFilters extends ExploreFilters {
 export async function discoverListings(filters: DiscoveryFilters): Promise<Listing[]> {
   let query = supabase
     .from("listings")
-    .select("id,type,title,description,category,price,salary_label,condition,employment_type,remote,city,suburb,provider_id,status,views,featured,cover_image_url,tags,posted_at,latitude,longitude")
+    .select("id,type,title,description,category,price,salary_label,condition,employment_type,remote,city,suburb,supply_country_code,fulfilment_country_code,provider_id,status,views,featured,cover_image_url,tags,posted_at,latitude,longitude")
     .eq("status", "active");
 
   const type = groupType(filters.group);
   if (type) query = query.eq("type", type);
   if (filters.city) query = query.eq("city", filters.city);
   if (filters.suburb) query = query.eq("suburb", filters.suburb);
+  if (filters.country) query = query.eq("supply_country_code", filters.country.toUpperCase());
   if (filters.q?.trim()) {
     const q = filters.q.trim().replace(/[%,_]/g, " ").replace(/\./g, " ");
     query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`);
