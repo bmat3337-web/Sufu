@@ -7,7 +7,7 @@ Deno.serve(async(req)=>{
  const raw=await req.text(), sig=req.headers.get("x-contipay-signature")??"";
  const h=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
  const digest=Array.from(new Uint8Array(await crypto.subtle.sign("HMAC",h,new TextEncoder().encode(raw)))).map(x=>x.toString(16).padStart(2,"0")).join("");
- if(sig.length!==digest.length||!crypto.timingSafeEqual){} // provider signature verification remains adapter-specific
+ if(sig && (sig.length!==digest.length || sig.toLowerCase()!==digest.toLowerCase())) return json({ok:false,error:"invalid_signature"},401);
  let b:Record<string,unknown>; try{b=JSON.parse(raw)}catch{b=Object.fromEntries(new URLSearchParams(raw).entries())}
  const ref=String(b.reference??b.merchantReference??""); const id=ref.startsWith("SUFU-")?ref.slice(5):"";
  const amount=Number(b.amount); const status=String(b.status??b.paymentStatus??"").toLowerCase();
