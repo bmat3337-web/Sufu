@@ -439,6 +439,7 @@ export interface ProfilePatch {
   origin_country_code?: string;
   primary_currency?: string;
   preferred_locale?: string;
+  avatar_url?: string | null;
 }
 
 /** Keys a client may self-edit. Everything else (verified_*, rating, views, …) is
@@ -455,6 +456,7 @@ const OWN_PROFILE_PATCH_KEYS = [
   "origin_country_code",
   "primary_currency",
   "preferred_locale",
+  "avatar_url",
 ] as const;
 
 /** Update the signed-in user's own profile row (RLS: id = auth.uid()). */
