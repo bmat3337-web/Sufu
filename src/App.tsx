@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useThemePreference } from "./lib/theme";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import BottomNav from "./components/BottomNav";
@@ -36,6 +37,7 @@ function Page({ path }: { path: string }) {
 
 export default function App() {
   const { path } = useRoute();
+  useThemePreference();
   const isRoute = path.startsWith("/");
   useEffect(() => { if (isRoute) window.scrollTo({ top: 0, left: 0, behavior: "auto" }); else document.getElementById(path)?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [path, isRoute]);
   return <AuthProvider><ToastProvider><div id="top" className="min-h-screen bg-background font-sans text-foreground"><Header /><main id="main-content" className="pb-24 md:pb-0"><Page path={path} /></main><Footer /><BottomNav path={path} /></div><AuthModal /></ToastProvider></AuthProvider>;
