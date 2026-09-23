@@ -12,6 +12,9 @@ import { supabase } from "./supabase";
 
 export interface OwnProfile {
   display_name: string;
+  tagline: string | null;
+  bio: string | null;
+  avatar_url: string | null;
   is_business: boolean;
   category: string | null;
   city: string | null;
@@ -54,7 +57,7 @@ export function useAuth(): AuthContextValue {
 }
 
 const PROFILE_COLUMNS =
-  "display_name, is_business, category, city, suburb, member_since, " +
+  "display_name, tagline, bio, avatar_url, is_business, category, city, suburb, member_since, " +
   "verified_phone, verified_email, verified_identity, verified_business";
 
 /** Turn raw GoTrue error messages into plain-language copy. */
