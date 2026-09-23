@@ -15,6 +15,7 @@ import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../components/Toast";
 import { TrustBadges } from "../components/TrustBadge";
+import ProfileSettings from "../components/ProfileSettings";
 import { avatarGradient, initials } from "../components/ProviderCard";
 import { Link } from "../router";
 import { formatUSD, timeAgo, type Listing, type VerificationId } from "../data";
@@ -281,6 +282,8 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+
+        <ProfileSettings />
 
         {sectionsLoading ? (
           <div

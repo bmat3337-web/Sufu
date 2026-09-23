@@ -1,0 +1,37 @@
+import { useRef, useState } from "react";
+import { Camera, Check, Loader2, Pencil, Sun, Moon, Monitor } from "lucide-react";
+import { useAuth } from "../lib/auth";
+import { updateOwnProfile } from "../lib/api";
+import { uploadAvatar } from "../lib/avatar";
+import { useThemePreference, type ThemePreference } from "../lib/theme";
+import { useToast } from "./Toast";
+import { avatarGradient, initials } from "./ProviderCard";
+
+const themes: { id: ThemePreference; label: string; icon: typeof Sun }[] = [
+  { id: "system", label: "System", icon: Monitor }, { id: "light", label: "Light", icon: Sun }, { id: "dark", label: "Dark", icon: Moon },
+];
+
+export default function ProfileSettings() {
+  const { user, profile, refreshProfile } = useAuth(); const toast = useToast(); const [theme,setTheme]=useThemePreference();
+  const [editing,setEditing]=useState(false); const [saving,setSaving]=useState(false); const [photoBusy,setPhotoBusy]=useState(false); const fileRef=useRef<HTMLInputElement>(null);
+  const [form,setForm]=useState({display_name:profile?.display_name??"",is_business:profile?.is_business??false,category:profile?.category??"",tagline:profile?.tagline??"",bio:profile?.bio??"",city:profile?.city??"",suburb:profile?.suburb??""});
+  if(!user||!profile)return null; const displayName=profile.display_name?.trim()||"Sufu member";
+  const beginEdit=()=>{setForm({display_name:profile.display_name??"",is_business:profile.is_business??false,category:profile.category??"",tagline:profile.tagline??"",bio:profile.bio??"",city:profile.city??"",suburb:profile.suburb??""});setEditing(true)};
+  const save=async()=>{if(!form.display_name.trim()){toast("Add a display name first.");return} setSaving(true);const r=await updateOwnProfile(user.id,{display_name:form.display_name.trim(),is_business:form.is_business,category:form.category.trim()||undefined,tagline:form.tagline.trim()||undefined,bio:form.bio.trim()||undefined,city:form.city.trim()||undefined,suburb:form.suburb.trim()||undefined});setSaving(false);if(r.error){toast("We couldn't save your profile. Try again.");return}await refreshProfile();setEditing(false);toast("Profile updated.")};
+  const uploadPhoto=async(file:File)=>{setPhotoBusy(true);const r=await uploadAvatar(file,user.id);if(!r.url){setPhotoBusy(false);toast(r.error??"The profile photo could not be uploaded.");return}const s=await updateOwnProfile(user.id,{avatar_url:r.url});setPhotoBusy(false);if(s.error){toast("Photo uploaded, but your profile could not be updated.");return}await refreshProfile();toast("Profile photo updated.")};
+  return <section aria-label="Profile and appearance settings" className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-heading text-lg font-bold tracking-tight text-foreground">Profile & appearance</h2><p className="mt-1 text-sm text-muted">Keep your public identity and app appearance up to date.</p></div>{!editing&&<button type="button" onClick={beginEdit} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:border-primary/50 hover:text-primary"><Pencil className="h-4 w-4"/> Edit profile</button>}</div>
+    <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center"><div className="relative"><span className={`flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${avatarGradient(displayName)} font-heading text-xl font-bold text-on-primary`}>{profile.avatar_url?<img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover"/>:initials(displayName)}</span><button type="button" onClick={()=>fileRef.current?.click()} disabled={photoBusy} aria-label="Change profile photo" className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-surface bg-primary text-on-primary shadow-md disabled:opacity-60">{photoBusy?<Loader2 className="h-4 w-4 animate-spin"/>:<Camera className="h-4 w-4"/>}</button><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e=>{const f=e.target.files?.[0];if(f)void uploadPhoto(f);e.currentTarget.value=""}}/></div><div><p className="font-semibold text-foreground">{displayName}</p><p className="mt-1 text-sm text-muted">{profile.tagline||"Add a short tagline to tell neighbours what you do."}</p><p className="mt-1 text-xs text-muted">JPG, PNG or WebP · maximum 5 MB</p></div></div>
+    {editing&&<div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <label className="text-sm font-semibold">Display name<input value={form.display_name} onChange={e=>setForm({...form,display_name:e.target.value})} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="text-sm font-semibold">Category<input value={form.category} onChange={e=>setForm({...form,category:e.target.value})} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="text-sm font-semibold sm:col-span-2">Tagline<input value={form.tagline} onChange={e=>setForm({...form,tagline:e.target.value})} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="text-sm font-semibold sm:col-span-2">Bio<textarea value={form.bio} onChange={e=>setForm({...form,bio:e.target.value})} rows={4} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="text-sm font-semibold">City<input value={form.city} onChange={e=>setForm({...form,city:e.target.value})} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="text-sm font-semibold">Suburb<input value={form.suburb} onChange={e=>setForm({...form,suburb:e.target.value})} className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-normal"/></label>
+      <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-surface-warm px-4 py-3 text-sm font-semibold sm:col-span-2"><input type="checkbox" checked={form.is_business} onChange={e=>setForm({...form,is_business:e.target.checked})} className="h-4 w-4 accent-primary"/>This is a business profile</label>
+      <div className="flex gap-2 sm:col-span-2"><button type="button" onClick={()=>setEditing(false)} className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold">Cancel</button><button type="button" onClick={()=>void save()} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary disabled:opacity-60">{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Check className="h-4 w-4"/>}{saving?"Saving…":"Save profile"}</button></div>
+    </div>}
+    <div className="mt-7 border-t border-border pt-5"><h3 className="text-sm font-semibold">Appearance</h3><div className="mt-2 grid grid-cols-3 gap-2">{themes.map(({id,label,icon:Icon})=><button key={id} type="button" aria-pressed={theme===id} onClick={()=>setTheme(id)} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${theme===id?"border-primary bg-primary-soft text-primary":"border-border bg-background text-muted"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
+  </section>;
+}
