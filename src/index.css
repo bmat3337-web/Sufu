@@ -121,3 +121,17 @@ body {
 .animate-pop-in {
   animation: pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+
+/* User appearance preferences. Components consume semantic SUFU tokens. */
+html[data-theme="dark"] {
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-surface-warm: #273444;
+  --color-foreground: #f3f4f6;
+  --color-muted: #c4c9d1;
+  --color-border: #374151;
+  --color-primary-soft: #134e4a;
+  --color-gold-soft: #4b3410;
+}
+html[data-theme="dark"] body { background-color: var(--color-background); color: var(--color-foreground); }
